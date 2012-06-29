@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
 	opt.overview = "Demo of parser's features.";
 	opt.syntax = "complete first second [OPTIONS] in1 [... inN] out";
 	opt.example = "complete a b -f --list 1,2,3 --list 4,5,6,7,8 -s string -int -2147483648,2147483647 -ulong 9223372036854775807 -float 3.40282e+038 -double 1.79769e+308 f1 f2 f3 f4 f5 f6 fout\n\n";
-	opt.footer = "ezOptionParser 0.1.0  Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
+	opt.footer = "ezOptionParser 0.1.4  Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
 
 	opt.add(
 		"", // Default.

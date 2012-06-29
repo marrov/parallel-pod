@@ -1,22 +1,8 @@
 /*
-This file is part of ezOptionParser.
-
-ezOptionParser is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-ezOptionParser is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with ezOptionParser.  If not, see <http://www.gnu.org/licenses/>.
+This file is part of ezOptionParser. See MIT-LICENSE.
 
 Copyright (C) 2011 Remik Ziemlinski <first d0t surname att gmail>
-*/
-/*
+
 CHANGELOG
 
 v0.0.0 20110505 rsz Created.
@@ -24,6 +10,7 @@ v0.1.0 20111006 rsz Added validator.
 v0.1.1 20111012 rsz Fixed validation of ulonglong.
 v0.1.2 20111126 rsz Allow flag names start with alphanumeric (previously, flag had to start with alpha).
 v0.1.3 20120108 rsz Created work-around for unique id generation with IDGenerator that avoids retarded c++ translation unit linker errors with single-header static variables. Forced inline on all methods to please retard compiler and avoid multiple def errors.
+v0.1.4 20120629 Enforced MIT license on all files.
 */
 #ifndef EZ_OPTION_PARSER_H
 #define EZ_OPTION_PARSER_H

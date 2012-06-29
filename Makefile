@@ -1,7 +1,9 @@
-.PHONY: all examples html memtest test clean
+.PHONY: all examples html install memtest test clean
 
 APP = ezOptionParser
 DEVDIR = ezoptionparser-code
+PREFIX ?= /usr/local
+export PREFIX
 
 all: examples
 
@@ -14,6 +16,11 @@ clean:
 html:
 	cd examples && $(MAKE) html
 	pygmentize -O full,linenos=1,style=manni -o html/ezOptionParser.html ezOptionParser.hpp
+	markdown README.md > html/index.html
+	cp ezOptionParser.hpp html
+
+install:
+	cp ezOptionParser.hpp $(PREFIX)/include
 
 memtest:
 	cd examples && $(MAKE) memtest

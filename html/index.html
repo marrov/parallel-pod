@@ -1,284 +1,175 @@
-<html
-<head>
-<title>
-ezOptionParser : C++ Command Line Parser
-</title>
-</head>
-<body>
-<p align=right>
-<table>
-<tr>
-<td>
-<a href="http://sourceforge.net">
-<img src="http://sourceforge.net/sflogo.php?group_id=542606&amp;type=2" 
-width="125" height="37" border="0" alt="SourceForge.net Logo" /></a>
-</td>
-</tr>
+<h2>Overview</h2>
 
-</table>
+<p><a href="http://sourceforge.net/projects/ezoptionparser/">ezOptionParser</a> is another command-line parser class for C++ that has features not available in alternative solutions (getopt, boost, argtable, argstream, gflags) and doesn't require a steep learning curve.</p>
 
-</p>
-<p>
-<font SIZE="+4">
-ezOptionParser
-</font>
+<h2>Download</h2>
 
-</p>
+<p><a href="http://sourceforge.net/projects/ezoptionparser/files/">Source Code and Examples</a></p>
 
-<p>
+<p><a href="ezOptionParser.hpp">ezOptionParser.hpp</a></p>
 
-<ol>
+<h2>Features</h2>
 
-<li>
-<a href="#overview">
-Overview</a>
-
-</li>
-
-<li>
-<a href="#download">
-Download</a>
-</li>
-
-<li>
-<a href="#installation">
-Installation</a>
-
-</li>
-
-<li>
-<a href="#examples">
-
-Examples</a>
-</li>
-
-<li>
-<a href="#news">
-News</a>
-
-</li>
-
-</ol>
-
-</p>
-
-
-<hr>
-</p>
-
-
-<h2>
-<a name="overview">
-Overview
-</a>
-</h2>
-<p>
-
-It's another command-line parser class for C++ that has features not available in alternative solutions (getopt, boost, argtable, argstream, gflags) and doesn't require a steep learning curve.
-
-<br>
-<h3>
-Features
-</h3>
 <ul>
-<li>
-Pretty printing of parsed inputs for debugging.
-</li>
-<li>
-Auto usage message creation in three layouts (aligned, interleaved or staggered).
-</li>
-<li>
-Tiny download and no linking due to single header file implementation.
-</li>
-<li>
-Dependent only on STL.
-</li>
-<li>
-Arbitrary short and long option names (dash or plus prefixes not required).
-</li>
-<li>
-Arbitrary argument list delimiters.
-</li>
-<li>
-Multiple flag instances allowed.
-</li>
-<li>
-Validation of required options, number of expected arguments per flag, datatype limits, custom value ranges, and lists.
-</li>
-<li>
-Multiple file import with comments.
-</li>
-<li>
-Exports to file, either set options or all options including defaults when available.
-</li>
-<li>
-MIT license.
-</li>
-<li>
-Minimal learning curve due to many examples.
-</li>
-<li>
-Automated regression and memory tests with valgrind.
-</li>
+<li>Pretty printing of parsed inputs for debugging.</li>
+<li>Auto usage message creation in three layouts (aligned, interleaved or staggered).</li>
+<li>Single header file implementation.</li>
+<li>Dependent only on STL.</li>
+<li>Arbitrary short and long option names (dash '-' or plus '+' prefixes not required).</li>
+<li>Arbitrary argument list delimiters.</li>
+<li>Multiple flag instances allowed.</li>
+<li>Validation of required options, number of expected arguments per flag, datatype ranges, user defined ranges, membership in lists and case for string lists.</li>
+<li>Validation criteria definable by strings or constants.</li>
+<li>Multiple file import with comments.</li>
+<li>Exports to file, either set options or all options including defaults when available. </li>
+<li>MIT license.</li>
+<li>Minimal learning curve due to many examples.</li>
+<li>Automated regression and memory tests with valgrind.</li>
 </ul>
 
+<h2>Examples</h2>
 
-<p>
-<hr>
-</p>
+<p><a href="complete.html">complete.cpp</a>
+A complete example that could be used as a starting point for your own C++ program.</p>
 
-<h2>
-<a name="download">
-Download
-</a>
-</h2>
-<p>
-Source Code, Examples and Tests: <a href="http://sourceforge.net/projects/ezoptionparser/files/ezOptionParser-0.1.3.tgz/download">ezOptionParser-0.1.3.tgz</a><br>
-Source Code for immediate use:
-<a href="ezOptionParser.hpp">ezOptionParser.hpp</a> <br>
-Source Code for online viewing:
-<a href="ezOptionParser.html">ezOptionParser.html</a>
-</p>
+<p><a href="fileio.html">fileio.cpp</a>
+Shows how to import and export options with files (that can contain comments!).</p>
 
-<p>
-<hr>
-</p>
+<p><a href="full.html">full.cpp</a>
+A full test of all the features. Meant for testing, but can be a source of ideas for what's possible.</p>
 
+<p><a href="long.html">long.cpp</a>
+Demo of using long flag names.</p>
 
-<h2>
-<a name="installation">
-Installation and Testing
-</a>
-</h2>
+<p><a href="multi.html">multi.cpp</a>
+Shows how to handle multiple instances of a flag.</p>
 
-<p>
-<ol>
-<li>
-<tt>
-tar -zxvf ezOptionParser-*tgz
-</tt>
-</li>
+<p><a href="pretty.html">pretty.cpp</a>
+Demo of pretty printing everything parsed, which can help in debugging.</p>
 
-<li>
-<tt>make; make memtest
-</tt>
+<p><a href="short.html">short.cpp</a>
+Short demo of a short flag name.</p>
 
-</li>
+<p><a href="usage.html">usage.cpp</a>
+Demo of automatic usage message creation in three builtin layouts.
+Here are how the three layouts appear:
+<a href="aligned.html">aligned</a>, <a href="interleaved.html">interleaved</a>, <a href="staggered.html">staggered</a></p>
 
-<li>
-<tt>
-make clean;
-</tt>
-</li>
+<p><a href="valid.html">valid.cpp</a>
+Demo of using validators defined by strings, which only check if values are within for their datatype limits.</p>
 
-</ol>
+<p><a href="validrange.html">validrange.cpp</a>
+Demo of using validators with value ranges and lists defined by strings.</p>
 
-</p>
+<p><a href="validfast.html">validfast.cpp</a>
+Demo of using validators defined by constants for more efficient execution. These validators only check if values are within for their datatype limits..</p>
 
+<p><a href="validrangefast.html">validrangefast.cpp</a>
+Demo of using validators with value ranges and lists defined by constants for more efficient execution.</p>
 
-<p>
-<hr>
-</p>
+<h2>Usage</h2>
 
-<h2>
-<a name="examples">
-Examples</a>
-</h2>
-<p>
-<ol>
-<li>
-<a href="complete.html">complete.cpp</a>
-A complete example that could be used as a starting point for your own C++ program.
-</li>
-<li>
-<a href="fileio.html">fileio.cpp</a>
-Shows how to import and export options with files (that can contain comments!).
-</li>
-<li>
-<a href="full.html">full.cpp</a>
-A full test of all the features. Meant for testing, but can be a source of ideas for what's possible.
-</li>
-<li>
-<a href="long.html">long.cpp</a>
-Demo of using long flag names.
-</li>
-<li>
-<a href="multi.html">multi.cpp</a>
-Shows how to handle multiple instances of a flag.
-</li>
-<li>
-<a href="pretty.html">pretty.cpp</a>
-Demo of pretty printing everything parsed, which can help in debugging.
-</li>
-<li>
-<a href="short.html">short.cpp</a>
-Short demo of a short flag name.
-</li>
-<li>
-<a href="usage.html">usage.cpp</a>
-Demo of automatic usage message creation in three builtin layouts.<br>
-Here are how the three layouts appear: <br>
-<a href="aligned.html">aligned</a> <br>
-<a href="interleaved.html">interleaved</a> <br>
-<a href="staggered.html">staggered</a>
-</li>
-<li>
-<a href="valid.html">valid.cpp</a>
-Demo of using validators defined by strings, which only check if values are within for their datatype limits.
-</li>
-<li>
-<a href="validrange.html">validrange.cpp</a>
-Demo of using validators with value ranges and lists defined by strings.
-</li>
-<li>
-<a href="validfast.html">validfast.cpp</a>
-Demo of using validators defined by constants for more efficient execution. These validators only check if values are within for their datatype limits..
-</li>
-<li>
-<a href="validrangefast.html">validrangefast.cpp</a>
-Demo of using validators with value ranges and lists defined by constants for more efficient execution.
-</li>
-</ol>
+<p>Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, as shown here:</p>
 
-<p>
+<p>#include <stdio.h>
+   #include "ezOptionParser.hpp"</p>
 
-<hr>
-</p>
+<p>int main(int argc, const char * argv[]) {
+      ez::ezOptionParser opt;</p>
 
-<h2>
-<a name="news">
-News</a>
-</h2>
-<p>
-<pre>
-Version 0.1.3 (6/3/2012)
+<pre><code>  opt.overview = "Demo of pretty printing everything parsed for debugging.";
+  opt.syntax = "pretty [OPTIONS]";
+  opt.example = "pretty foo bar --print -fake --dummy -list 1:2:16 in1 in2 in3 out\n";
 
-1. Changed license to MIT.
-2. Reformatted readme to markdown.
-3. Updated make dist target to be git friendly.
+  opt.add(
+     "", // Default.
+     0, // Required?
+     0, // Number of args expected.
+     0, // Delimiter if expecting multiple args.
+     "Print all inputs and their category.", // Help description.
+     "-p",     // Flag token. 
+     "-prn",   // Flag token.
+     "--print" // Flag token.
+  );
 
-Version 0.1.2 (11/26/2011)
+  opt.parse(argc, argv);
 
-1. Allows flags to begin with alphanumeric (not just alpha as before). That means you can have flags like -6, --64bit.
+  if (opt.isSet("-p")) {
+     std::string pretty;
+     opt.prettyPrint(pretty);
+     std::cout &lt;&lt; pretty;
+  }
 
-Version 0.1.1 (10/12/2011)
+  return 0;
+</code></pre>
 
-1. Fixed (unsigned) long long limits validation.
+<p>}</p>
 
-Version 0.1.0 (10/11/2011)
+<h2>Testing</h2>
 
-1. Added option validation.
+<pre><code>make
+make memtest
+make clean
+</code></pre>
 
-Version 0.0.0 (5/11/2011)
+<h2>Installation</h2>
 
-1. Published on SourceForge.
-</pre>
-</p>
+<pre><code>sudo make install PREFIX=/usr/local
+</code></pre>
 
-<p>
-<hr>
-</p>
+<h2>Distribution</h2>
 
-Copyright (C) 2011 Remik Ziemlinski MIT License
-</body>
-</html>
+<pre><code>make html
+make clean
+make dist VER=0.1.4
+</code></pre>
+
+<h2>Publishing</h2>
+
+<p>ssh -t rsz,ezoptionparser@shell.sourceforge.net create 
+   scp html/* ezOptionParser.hpp rsz,ezoptionparser@shell.sourceforge.net:/home/project-web/ezoptionparser/htdocs
+   scp ../ezOptionParser-0.1.4.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser</p>
+
+<h2>Changelog</h2>
+
+<p>v0.1.4 (20120629)</p>
+
+<ul>
+<li>Fixed file licenses to MIT.</li>
+</ul>
+
+<p>v0.1.3 (20120603)</p>
+
+<ul>
+<li>Changed license to MIT.</li>
+<li>Reformatted readme to markdown.</li>
+<li>Updated make dist target to be git friendly.</li>
+</ul>
+
+<p>v0.1.2 (20111126)</p>
+
+<ul>
+<li>Published.</li>
+</ul>
+
+<p>v0.1.1 (20111011)</p>
+
+<ul>
+<li>Published.</li>
+</ul>
+
+<p>v0.1.0 (20111011)</p>
+
+<ul>
+<li>Published.</li>
+</ul>
+
+<p>v0.0.0 (20110511)</p>
+
+<ul>
+<li>Published.</li>
+</ul>
+
+<h2>License</h2>
+
+<p>Copyright 2011, 2012 Remik Ziemlinski (see MIT-LICENSE)</p>

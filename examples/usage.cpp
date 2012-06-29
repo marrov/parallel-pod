@@ -12,7 +12,7 @@ int main(int argc, const char * argv[]) {
 	opt.overview = "Demo of automatic usage message creation.";
 	opt.syntax = "usage [OPTIONS]";
 	opt.example = "usage -h\n\n";
-	opt.footer = "usage v0.0.0 Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
+	opt.footer = "usage v0.1.4 Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
 
 	opt.add(
 		"0", // Default.

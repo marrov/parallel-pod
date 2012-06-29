@@ -12,7 +12,7 @@ int main(int argc, const char * argv[]) {
 	opt.overview = "Full demo of all the features.";
 	opt.syntax = "full [OPTIONS]";
 	opt.example = "full -h\n\n";
-	opt.footer = "full v0.0.0 Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
+	opt.footer = "full v0.1.4 Copyright (C) 2011 Remik Ziemlinski\nThis program is free and without warranty.\n";
 
 	opt.add(
 		"", // Default.
