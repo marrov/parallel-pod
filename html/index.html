@@ -71,13 +71,13 @@ Demo of using validators with value ranges and lists defined by constants for mo
 
 <p>Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, as shown here:</p>
 
-<p>#include <stdio.h>
-   #include "ezOptionParser.hpp"</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include "ezOptionParser.hpp"
 
-<p>int main(int argc, const char * argv[]) {
-      ez::ezOptionParser opt;</p>
+int main(int argc, const char * argv[]) {
+  ez::ezOptionParser opt;
 
-<pre><code>  opt.overview = "Demo of pretty printing everything parsed for debugging.";
+  opt.overview = "Demo of pretty printing everything parsed for debugging.";
   opt.syntax = "pretty [OPTIONS]";
   opt.example = "pretty foo bar --print -fake --dummy -list 1:2:16 in1 in2 in3 out\n";
 
@@ -101,9 +101,8 @@ Demo of using validators with value ranges and lists defined by constants for mo
   }
 
   return 0;
+}
 </code></pre>
-
-<p>}</p>
 
 <h2>Testing</h2>
 
@@ -126,9 +125,10 @@ make dist VER=0.1.4
 
 <h2>Publishing</h2>
 
-<p>ssh -t rsz,ezoptionparser@shell.sourceforge.net create 
-   scp html/* ezOptionParser.hpp rsz,ezoptionparser@shell.sourceforge.net:/home/project-web/ezoptionparser/htdocs
-   scp ../ezOptionParser-0.1.4.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser</p>
+<pre><code>ssh -t rsz,ezoptionparser@shell.sourceforge.net create 
+scp html/* ezOptionParser.hpp rsz,ezoptionparser@shell.sourceforge.net:/home/project-web/ezoptionparser/htdocs
+scp ../ezOptionParser-0.1.4.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser
+</code></pre>
 
 <h2>Changelog</h2>
 

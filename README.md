@@ -69,10 +69,10 @@ Usage
 -----
 Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, as shown here:
 
-   #include <stdio.h>
-   #include "ezOptionParser.hpp"
+    #include <stdio.h>
+    #include "ezOptionParser.hpp"
 
-   int main(int argc, const char * argv[]) {
+    int main(int argc, const char * argv[]) {
       ez::ezOptionParser opt;
 
       opt.overview = "Demo of pretty printing everything parsed for debugging.";
@@ -99,7 +99,7 @@ Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, a
       }
 
       return 0;
-   }
+    }
 
 Testing
 -------
