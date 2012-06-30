@@ -155,3 +155,6 @@ License
 -------
 Copyright 2011, 2012 Remik Ziemlinski (see MIT-LICENSE)
 
+<link rel="stylesheet" href="http://yandex.st/highlightjs/7.0/styles/default.min.css">
+<script src="http://yandex.st/highlightjs/7.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
