@@ -69,38 +69,77 @@ Usage
 -----
 Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, as shown here:
 
+    // pretty.cpp
     #include <stdio.h>
     #include "ezOptionParser.hpp"
 
     int main(int argc, const char * argv[]) {
       ez::ezOptionParser opt;
 
-      opt.overview = "Demo of pretty printing everything parsed for debugging.";
+      opt.overview = "Demo of pretty printing everything parsed.";
       opt.syntax = "pretty [OPTIONS]";
-      opt.example = "pretty foo bar --print -fake --dummy -list 1:2:16 in1 in2 in3 out\n";
+      opt.example = "pretty foo bar --debug --dummy -list 1,2,16 in1 in2 out\n\n";
+      opt.footer = "ezOptionParser (C) 2012\n";
+      
+      opt.add(
+        "", // Default.
+        0, // Required?
+        0, // Number of args expected.
+        0, // Delimiter if expecting multiple args.
+        "Display usage instructions.", // Help description.
+        "-h",     // Flag token. 
+        "-help",  // Flag token.
+        "--help", // Flag token.
+        "--usage" // Flag token.
+      );
 
       opt.add(
-         "", // Default.
-         0, // Required?
-         0, // Number of args expected.
-         0, // Delimiter if expecting multiple args.
-         "Print all inputs and their category.", // Help description.
-         "-p",     // Flag token. 
-         "-prn",   // Flag token.
-         "--print" // Flag token.
+        "", // Default.
+        0, // Required?
+        0, // Number of args expected.
+        0, // Delimiter if expecting multiple args.
+        "Print all inputs and categories for debugging.", // Help description.
+        "--debug"     // Flag token. 
       );
 
       opt.parse(argc, argv);
 
-      if (opt.isSet("-p")) {
-         std::string pretty;
-         opt.prettyPrint(pretty);
-         std::cout << pretty;
+      if (opt.isSet("-h")) {
+      	std::string usage;
+        opt.getUsage(usage);
+        std::cout << usage;
+        return 1;
+      }
+      
+      if (opt.isSet("--debug")) {
+        std::string pretty;
+        opt.prettyPrint(pretty);
+        std::cout << pretty;
       }
 
       return 0;
     }
 
+Here is the auto-generated usage message:
+
+    ./pretty -h
+    Demo of pretty printing everything parsed.
+
+    USAGE: pretty [OPTIONS]
+
+    OPTIONS:
+
+    -h, -help, --help, --usage   Display usage instructions.
+
+    --debug                      Print all inputs and categories for debugging.
+
+    EXAMPLES:
+
+    pretty foo bar --debug --dummy -list 1,2,16 in1 in2 out
+
+    ezOptionParser (C) 2012
+
+    
 Testing
 -------
     make
