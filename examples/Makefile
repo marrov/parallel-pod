@@ -10,8 +10,8 @@ CXX=g++
 CXXFLAGS=-O2 -I.. -o
 EXT=
 
-BIN=long$(EXT) complete$(EXT) fileio$(EXT) full$(EXT) multi$(EXT) pretty$(EXT) short$(EXT) usage$(EXT) valid$(EXT) validfast$(EXT) validrange$(EXT) validrangefast$(EXT)
-SRCS=long complete fileio full multi pretty short usage valid validfast validrange validrangefast
+BIN=long$(EXT) complete$(EXT) fileio$(EXT) full$(EXT) multi$(EXT) parseindex$(EXT) pretty$(EXT) short$(EXT) usage$(EXT) valid$(EXT) validfast$(EXT) validrange$(EXT) validrangefast$(EXT)
+SRCS=long complete fileio full multi parseindex pretty short usage valid validfast validrange validrangefast
 
 all: test
 
@@ -32,6 +32,9 @@ long$(EXT): ../ezOptionParser.hpp long.cpp
 
 multi$(EXT): ../ezOptionParser.hpp multi.cpp
 	$(CXX) multi.cpp $(CXXFLAGS) multi$(EXT)
+
+parseindex$(EXT): ../ezOptionParser.hpp parseindex.cpp
+	$(CXX) parseindex.cpp $(CXXFLAGS) parseindex$(EXT)
 
 pretty$(EXT): ../ezOptionParser.hpp pretty.cpp
 	$(CXX) pretty.cpp $(CXXFLAGS) pretty$(EXT)
@@ -61,4 +64,4 @@ memtest: $(BIN)
 	./memtest.sh
 
 clean:
-	rm -f *.obj *.exe *.o $(BIN) *.stackdump core* tmp.* *.html
+	-rm -f *.obj *.exe *.o $(BIN) *.stackdump core* tmp.* *.html *~

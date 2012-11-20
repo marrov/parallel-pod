@@ -12,6 +12,7 @@ examples:
 
 clean:
 	cd examples && $(MAKE) clean
+	-rm -f *~
 
 html:
 	cd examples && $(MAKE) html

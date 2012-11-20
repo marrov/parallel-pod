@@ -1,5 +1,9 @@
 #!/bin/bash
 
+test=parseindex
+valgrind --tool=memcheck --leak-check=full --show-reachable=yes --log-file=tmp.valgrind.log ./$test a b c d e f g -f ooz -c bar,baz -l 1:-9:0 h i j k -c opto,mum -f foo bub > /dev/null
+grep "leak" tmp.valgrind.log || echo "ERROR: Leaks are possible. See tmp.$test.log" && mv tmp.valgrind.log tmp.$test.log
+
 test=pretty
 valgrind --tool=memcheck --leak-check=full --show-reachable=yes --log-file=tmp.valgrind.log ./$test a b c d e f g -p -foo -bar -l 1:-9:0 h i j k  > /dev/null
 grep "leak" tmp.valgrind.log || echo "ERROR: Leaks are possible. See tmp.$test.log" && mv tmp.valgrind.log tmp.$test.log

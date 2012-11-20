@@ -14,7 +14,7 @@ function elementExists {
 
 # Allow user to run specific tests only, such as: test.sh "1 10 11"
 if [ -z "$1" ]; then
-	NTESTS=57
+	NTESTS=58
 	TESTS=`seq 1 1 $NTESTS`
 else
 	TESTS="$1"
@@ -801,6 +801,20 @@ elementExists $CUR "$TESTS"
 if [ $? -eq 1 ]; then
 	echo -n "Test $CUR..."
 	./validrangefast -u8list 0,10,18446744073709551619 2>&1 | grep "Got invalid argument \"18446744073709551619\"" > /dev/null
+	if [ "$?" -ne "0" ]; then
+		echo FAILED
+	else
+		echo PASSED
+		testctr=$((testctr+1))
+	fi
+fi
+
+####################################################################
+CUR=58
+elementExists $CUR "$TESTS"
+if [ $? -eq 1 ]; then
+	echo -n "Test $CUR..."
+	./parseindex skip -f foo -c bar,baz -c bam -f ooz -c yum ignore 2>&1 | tr -d "\n" | grep '\-c indices\: 4 6 10 \-f indices: 2 8' > /dev/null
 	if [ "$?" -ne "0" ]; then
 		echo FAILED
 	else

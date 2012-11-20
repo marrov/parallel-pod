@@ -1,7 +1,7 @@
 /*
 This file is part of ezOptionParser. See MIT-LICENSE.
 
-Copyright (C) 2011 Remik Ziemlinski <first d0t surname att gmail>
+Copyright (C) 2011,2012 Remik Ziemlinski <first d0t surname att gmail>
 
 CHANGELOG
 
@@ -11,6 +11,7 @@ v0.1.1 20111012 rsz Fixed validation of ulonglong.
 v0.1.2 20111126 rsz Allow flag names start with alphanumeric (previously, flag had to start with alpha).
 v0.1.3 20120108 rsz Created work-around for unique id generation with IDGenerator that avoids retarded c++ translation unit linker errors with single-header static variables. Forced inline on all methods to please retard compiler and avoid multiple def errors.
 v0.1.4 20120629 Enforced MIT license on all files.
+v0.2.0 20121120 Added parseIndex to OptionGroup.
 */
 #ifndef EZ_OPTION_PARSER_H
 #define EZ_OPTION_PARSER_H
@@ -934,6 +935,7 @@ public:
       delete flags[i];
       
     flags.clear();
+    parseIndex.clear();
     clearArgs();
   };
 
@@ -975,6 +977,8 @@ public:
   bool isSet;
   // Lists of arguments, per flag instance, after splitting by delimiter.
   std::vector< std::vector< std::string* > * > args;
+  // Index where each group was parsed from input stream to track order.
+  std::vector<int> parseIndex;
 };
 /* ################################################################### */
 void OptionGroup::clearArgs() {
@@ -2034,6 +2038,8 @@ void ezOptionParser::parse(int argc, const char * argv[]) {
       k = optionGroupIds[s];
       g = groups[k];
       g->isSet = 1;
+      g->parseIndex.push_back(i);
+
       if (g->expectArgs) {
         // Read ahead to get args.
         ++i;
@@ -2052,9 +2058,8 @@ void ezOptionParser::parse(int argc, const char * argv[]) {
     if (optionGroupIds.count(s)) {
       k = optionGroupIds[s];
       g = groups[k];
-      g->isSet = 1;
       if (g->expectArgs) {
-        // Read ahead for args.
+        // Read ahead for args and skip them.
         ++i;
       }
     } else {

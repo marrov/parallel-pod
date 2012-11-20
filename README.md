@@ -20,7 +20,8 @@ Features
 -   Validation of required options, number of expected arguments per flag, datatype ranges, user defined ranges, membership in lists and case for string lists.
 -   Validation criteria definable by strings or constants.
 -   Multiple file import with comments.
--   Exports to file, either set options or all options including defaults when available. 
+-   Exports to file, either set options or all options including defaults when available.
+-   Option parse index for order dependent contexts. 
 -   MIT license.
 -   Minimal learning curve due to many examples.
 -   Automated regression and memory tests with valgrind.
@@ -41,6 +42,9 @@ Demo of using long flag names.
 
 [multi.cpp](multi.html)
 Shows how to handle multiple instances of a flag.
+
+[parseindex.cpp](parseindex.html)
+Demo of parsed indices for options, so you can create ordered contexts.
 
 [pretty.cpp](pretty.html)
 Demo of pretty printing everything parsed, which can help in debugging.
@@ -154,16 +158,20 @@ Distribution
 ------------
     make html
     make clean
-    make dist VER=0.1.4
+    make dist VER=0.2.0
 
 Publishing
 ----------
     ssh -t rsz,ezoptionparser@shell.sourceforge.net create 
     scp html/* ezOptionParser.hpp rsz,ezoptionparser@shell.sourceforge.net:/home/project-web/ezoptionparser/htdocs
-    scp ../ezOptionParser-0.1.4.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser
+    scp ../ezOptionParser-0.2.0.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser
 
 Changelog
 ---------
+v0.2.0 (20121120)
+
+-   Added parse index to options. Thanks to Michael Lachmann for the idea.
+
 v0.1.4 (20120629)
 
 -   Fixed file licenses to MIT.
