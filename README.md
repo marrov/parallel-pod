@@ -83,7 +83,7 @@ Copy or include ezOptionParser.hpp to your project and use the "ez" namespace, a
       opt.overview = "Demo of pretty printing everything parsed.";
       opt.syntax = "pretty [OPTIONS]";
       opt.example = "pretty foo bar --debug --dummy -list 1,2,16 in1 in2 out\n\n";
-      opt.footer = "ezOptionParser (C) 2012\n";
+      opt.footer = "ezOptionParser (C) 2013\n";
       
       opt.add(
         "", // Default.
@@ -141,7 +141,7 @@ Here is the auto-generated usage message:
 
     pretty foo bar --debug --dummy -list 1,2,16 in1 in2 out
 
-    ezOptionParser (C) 2012
+    ezOptionParser (C) 2013
 
     
 Testing
@@ -158,16 +158,20 @@ Distribution
 ------------
     make html
     make clean
-    make dist VER=0.2.0
+    make dist VER=0.2.1
 
 Publishing
 ----------
     ssh -t rsz,ezoptionparser@shell.sourceforge.net create 
     scp html/* ezOptionParser.hpp rsz,ezoptionparser@shell.sourceforge.net:/home/project-web/ezoptionparser/htdocs
-    scp ../ezOptionParser-0.2.0.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser
+    scp ../ezOptionParser-0.2.1.tar.gz rsz,ezoptionparser@shell.sourceforge.net:/home/frs/project/e/ez/ezoptionparser
 
 Changelog
 ---------
+v0.2.1 (20130506)
+
+-   Added a toggle to disable extra line break between OPTIONS usage descriptions (opts->doublespace = 0;). This will pack the descriptions together like traditional usage messages, so you can see more per page.
+
 v0.2.0 (20121120)
 
 -   Added parse index to options. Thanks to Michael Lachmann for the idea.

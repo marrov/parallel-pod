@@ -12,6 +12,7 @@ v0.1.2 20111126 rsz Allow flag names start with alphanumeric (previously, flag h
 v0.1.3 20120108 rsz Created work-around for unique id generation with IDGenerator that avoids retarded c++ translation unit linker errors with single-header static variables. Forced inline on all methods to please retard compiler and avoid multiple def errors.
 v0.1.4 20120629 Enforced MIT license on all files.
 v0.2.0 20121120 Added parseIndex to OptionGroup.
+v0.2.1 20130506 Allow disabling doublespace of OPTIONS usage descriptions.
 */
 #ifndef EZ_OPTION_PARSER_H
 #define EZ_OPTION_PARSER_H
@@ -1337,6 +1338,8 @@ public:
   inline void reset();
   inline void resetArgs();
     
+  // Insert extra empty line betwee each option's usage description.
+  char doublespace;
   // General description in human language on what the user's tool does.
   // It's the first section to get printed in the full usage message.
   std::string overview;
@@ -1368,6 +1371,8 @@ ezOptionParser::~ezOptionParser() {
 }
 /* ################################################################### */
 void ezOptionParser::reset() {
+  this->doublespace = 1;
+  
   int i;
   for(i=0; i < groups.size(); ++i)
     delete groups[i];
@@ -1901,7 +1906,7 @@ void ezOptionParser::getUsageDescriptions(std::string & usage, int width, Layout
       // Add whitespace between option names and description.
       usage.append(pad - sortedOpts[i].size(), ' ');
     else {
-      usage.append("\n\n");
+      usage.append("\n");
       usage.append(gutter, ' ');
     }
     
@@ -1916,7 +1921,7 @@ void ezOptionParser::getUsageDescriptions(std::string & usage, int width, Layout
       usage.append("\n");
     }
 
-    usage.append("\n");
+    if (this->doublespace) usage.append("\n");    
     
     if (desc.size()) {
       for(cIter=desc.begin(); cIter != desc.end(); ++cIter)    
