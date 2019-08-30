@@ -16,4 +16,14 @@ Marc Rovira (marrs@kth.se), Yazhou Shen (yashen@kth.se), Kristian Rönnberg (kri
 We are currently all working on CFD at the Mechanics department at KTH. All of as either are or are intending to apply POD in our research. POD is applied to datasets generated with OpenFOAM. We currently have good datasets, and a reference implementation, which we can be used as starting points for the project. Kristian is not located at KTH more than once per week, so we intend to exercise version control and usage of GitHub to store and manage our progress. Furthermore, our intention is first to port the implementation from Python to C/C++, which will allow for a benchmarking of a compiled vs. interpreted language. The second step is to parallelize the code using MPI. The reason for choosing MPI is that we are currently working extensively with OpenFOAM, which is parallelized using MPI, and thus consider this to be a good chance to get a glimpse of how this works. Hence, SMP is not considered at the moment. As a third, and optional step, an OpenMP or CUDA-based implementation could be considered.
  
 In addition to learning more about parallel programming and MPI, a working implementation that will facilitate our future research is the desired outcome. Experience using git and collaborating on a publicly shared and off-site hosted source code repository, such as GitHub, is also of relevance.
- 
+
+# To-do list:
+- [ ] Make list of how the input data should be read (format, etc) and how it flows along the code
+ - [ ] (M) Make verification/test case (for RAW input) with run script
+ - [ ] (M) Profile the python verification case 
+- [ ] Understand the legacy python code and write the pseudo code version
+- [ ] WIP decide a coding style for C++
+- [ ] OPT define a validation case
+- [ ] Identify linear algebra packages in C++ (serial and parallel)
+
+Key: OPT: optional, WIP: work in progess, (M): task for Marc
