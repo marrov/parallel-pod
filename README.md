@@ -19,8 +19,8 @@ In addition to learning more about parallel programming and MPI, a working imple
 
 # To-do list:
 - [ ] Make list of how the input data should be read (format, etc) and how it flows along the code
- - [ ] (M) Make verification/test case (for RAW input) with run script
- - [ ] (M) Profile the python verification case 
+- [X] (M) Make verification/test case (for RAW input) with run script
+- [ ] (M) Profile the python verification case 
 - [ ] Understand the legacy python code and write the pseudo code version
 - [ ] WIP decide a coding style for C++
 - [ ] OPT define a validation case
