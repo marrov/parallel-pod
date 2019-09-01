@@ -2,15 +2,12 @@
 ##          libraries
 #####################################################################################################
 
-#from pylab import *
 from pyevtk.hl import gridToVTK
 from scipy.linalg import norm
 
 from scipy import signal
 
 import numpy as np
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
 
 from numpy import linalg as la
 
@@ -27,7 +24,9 @@ start_time = clock.time()
 # size of the snapshot
 MM = 381600
 # number of snapshots
-N = 2804  # 1243
+N = 1402
+# number of modes to write (includes mode 0)
+nModes = 51
 # number of the first snapshot
 First_Snapshot=1
 
@@ -45,12 +44,6 @@ data_time_U = np.zeros([3*MM,N],'float')
 data_time_Ux = np.zeros([MM,N],'float') 
 data_time_Uy = np.zeros([MM,N],'float') 
 data_time_Uz = np.zeros([MM,N],'float') 
-reconstructed_Ux = np.zeros([MM,N],'float') 
-reconstructed_Uy = np.zeros([MM,N],'float') 
-reconstructed_Uz = np.zeros([MM,N],'float') 
-mean_Ux = np.zeros(MM,'float')
-mean_Uy = np.zeros(MM,'float')
-mean_Uz = np.zeros(MM,'float')
 
 chronos = np.zeros([N,N],'float')
 
@@ -59,7 +52,7 @@ data1 = np.zeros([3*MM],'float') #For projection
 data2 = np.zeros([3*MM],'float') #For projection
 projection_matrix = np.zeros([N,N],'float')
 
-time = np.loadtxt('../../../data/longest3M/times.txt', skiprows=0)
+time = np.loadtxt('../../../../data/longest3M/timesHalfU.txt', skiprows=0)
 data_time = np.zeros([N], 'float')
 
 #Store the POD modes for each scalar
@@ -72,7 +65,7 @@ for  t in range(N) :
     loop_time = clock.time()
     data_time[t] = time[t]
     Snapshot = First_Snapshot+t
-    data_U = np.loadtxt('../../../data/longest3M/sortedField/U/U_%s.dat' % Snapshot, skiprows=0)
+    data_U = np.loadtxt('../../../../data/longest3M/sortedField/halfU/U_%s.dat' % Snapshot, skiprows=0)
     data_Ux = data_U[:, 0]
     data_Uy = data_U[:, 1]
     data_Uz = data_U[:, 2]
@@ -83,9 +76,9 @@ for  t in range(N) :
         data_time_U[i+0*MM,t] = data_Ux[i]
         data_time_U[i+1*MM,t] = data_Uy[i]
         data_time_U[i+2*MM,t] = data_Uz[i]
-    print('reading data ', t, ' over ', N, ' executed in ', '%.2f' % (clock.time()-loop_time), ' s')
+    print ('reading data ', t, ' over ', N, ' executed in ', '%.2f' % (clock.time()-loop_time), ' s')
 
-print(data_time_Ux)
+print (data_time_Ux)
 
 #####Proceed to POD analysis for the Q criterion
 #####################################################################################################
@@ -103,7 +96,7 @@ print (projection_matrix)
 
 [A,B]=np.linalg.eig(projection_matrix)
 
-print('EigenValues')
+print ('EigenValues')
 #order the eigenvalues the last one is the largest here
 C=np.msort(np.real(A))
 X1=A.argsort(axis=0)
@@ -116,72 +109,36 @@ write_A = open('./chronos/A.txt', 'w')
 for t1 in range(0,N,1) :
    loop_time = clock.time()
    t3 = X1[N-(t1+1)]
-   write_A.write('%4.8f ' % A[t3])
-   write_A.write('\n')
-   write_B = open('./chronos/B.%s.txt' % t1, 'w')
+   write_A.write('%4.8f \n' % A[t3])
+   if t1 <= nModes:
+      write_chronos = open('./chronos/chronos.%s.txt' % t1, 'w')
    for t2 in range(0,N,1) :
-         write_B.write('%4.8f ' % (np.sqrt(A[t3]*N) * B[t2,t3]))
-         write_B.write('\n')
+         if t1 <= nModes:
+            write_chronos.write('%4.8f \n' % (np.sqrt(A[t3]*N) * B[t2, t3]))
          POD_mode_Ux[:,t1] = POD_mode_Ux[:,t1] + (1/(A[t3]*N))* (np.sqrt(A[t3]*N)) * B[t2,t3] * data_time_Ux[:,t2]
          POD_mode_Uy[:,t1] = POD_mode_Uy[:,t1] + (1/(A[t3]*N))* (np.sqrt(A[t3]*N)) * B[t2,t3] * data_time_Uy[:,t2]
          POD_mode_Uz[:,t1] = POD_mode_Uz[:,t1] + (1/(A[t3]*N))* (np.sqrt(A[t3]*N)) * B[t2,t3] * data_time_Uz[:,t2]
-   print('POD mode ', t1, ' over ', N, ' executed in ', '%.2f' % (clock.time()-loop_time), ' s')
+   print ('POD mode ', t1, ' over ', N, ' executed in ', '%.2f' % (clock.time()-loop_time), ' s')
 
-mean_Ux[:] = POD_mode_Ux[:,0]
-mean_Uy[:] = POD_mode_Uy[:,0]
-mean_Uz[:] = POD_mode_Uz[:,0]
-
-for t1 in range(0,N,1) :
-   loop_time = clock.time()
-   t3 = X1[N-(t1+1)]
-   for t2 in range(0,N,1) :
-      chronos[t1,t2] = (np.sqrt(A[t3]*N) * B[t2,t3])
-   print('chronos ', t1, ' over ', N, ' executed in ', '%.2f' % (clock.time()-loop_time), ' s')
-
-for i in range(0,MM,1) :
-   for t1 in range(0,N,1) : # KEEP N-1 !!! 
-      reconstructed_Ux[i,0] = reconstructed_Ux[i,0] + POD_mode_Ux[i,t1]*chronos[t1,0] 
-      reconstructed_Uy[i,0] = reconstructed_Uy[i,0] + POD_mode_Uy[i,t1]*chronos[t1,0] 
-      reconstructed_Uz[i,0] = reconstructed_Uz[i,0] + POD_mode_Uz[i,t1]*chronos[t1,0] 
-
-print('Write the txt files')
+print ('Writing the modes in txt files')
 
 write_POD_time = open('./mode/time_POD.txt', 'w')
-for t1 in range(0,N,1) :
-   write_POD_time.write('%5e ' % data_time[t1])
+
+for t1 in range(0,nModes,1) :
+   write_POD_time.write('%5e \n' % data_time[t1])
    write_POD_mode_Ux = open('./mode/mode_Ux.%s.txt' % (t1), 'w')
    write_POD_mode_Uy = open('./mode/mode_Uy.%s.txt' % (t1), 'w')
    write_POD_mode_Uz = open('./mode/mode_Uz.%s.txt' % (t1), 'w')
-   write_chronos = open('./chronos/chronos.%s.txt' % (t1), 'w')
    for i in range(0,MM,1) :
-      write_POD_mode_Ux.write('%5e ' % POD_mode_Ux[i,(t1)])
-      write_POD_mode_Ux.write('\n')
-      write_POD_mode_Uy.write('%5e ' % POD_mode_Uy[i,(t1)])
-      write_POD_mode_Uy.write('\n')
-      write_POD_mode_Uz.write('%5e ' % POD_mode_Uz[i,(t1)])
-      write_POD_mode_Uz.write('\n')
-   for t2 in range(0,N,1) :
-      write_chronos.write('%4.8f ' % chronos[t1,t2])
-      write_chronos.write('\n')
-
-
-write_reconstructed_Ux = open('./mode/reconstructed_Ux.txt', 'w')
-for i in range(MM):
-   write_reconstructed_Ux.write('%5e %5e' % (reconstructed_Ux[i,0], data_time_Ux[i,0]))
-   write_reconstructed_Ux.write('\n')
-
-
-write_mean_Ux = open('./mode/mean_Ux.txt', 'w')
-for i in range(MM):
-   write_mean_Ux.write('%5e ' % mean_Ux[i])
-   write_mean_Ux.write('\n')
+      write_POD_mode_Ux.write('%5e \n' % POD_mode_Ux[i,(t1)])
+      write_POD_mode_Uy.write('%5e \n' % POD_mode_Uy[i,(t1)])
+      write_POD_mode_Uz.write('%5e \n' % POD_mode_Uz[i,(t1)])
 
 #####################################################################################################
 ##          Export the grid data in a vtk format readable by paraview
 #####################################################################################################
 
-
-print('Write the VTK files')
+print ('Writing the modes in VTK files')
 
 #Definition of the grid for writing a vtk file with this solution
 nx, ny, nz = 106, 60, 60
@@ -203,8 +160,6 @@ Ux_Mode = np.zeros((nx, ny, nz))
 Uy_Mode = np.zeros((nx, ny, nz))
 Uz_Mode = np.zeros((nx, ny, nz))
 
-nModes = 50
-
 for idx in range(nModes):
    for k in range(nz):
       for i in range(nx):
@@ -218,11 +173,4 @@ for idx in range(nModes):
             Uz_Mode[i, j, k] = POD_mode_Uz[i*ny+j+k*ny*nx, idx]
    U_Mode = (Ux_Mode, Uy_Mode, Uz_Mode)
    gridToVTK("VTK/mode_U_%s" %(idx), x, y, z, pointData={"U": U_Mode})
-
-
-
-
-
-
-
 
