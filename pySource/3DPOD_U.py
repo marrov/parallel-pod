@@ -60,6 +60,7 @@ POD_mode_Ux = np.zeros([MM,N],'float')
 POD_mode_Uy = np.zeros([MM,N],'float')
 POD_mode_Uz = np.zeros([MM,N],'float')
 
+#put velocity data and put into one big matrix (which we might could skip)
 print 'Creating database...\n'
 for  t in range(N) :
     loop_time = clock.time()
@@ -82,6 +83,8 @@ for  t in range(N) :
 #####################################################################################################
 Loop_time = clock.time()
 print '\nComputing the correlation matrix for U... \n'
+
+#get the correlation matrix with the size of N (which is the reason snapshot pod takes much less time than normal POD)
 for t1 in range(0,N,1) :
     for t2 in range(0,N,1) :
         data1 = data_time_U[:,t1]
@@ -92,6 +95,7 @@ projection_matrix = (1.0/N)*projection_matrix
 
 print 'Calculating eigenvalues...\n'
 
+#get the eigenvalues and eigenvectors
 [A,B]=np.linalg.eig(projection_matrix)
 
 #order the eigenvalues the last one is the largest here
@@ -100,6 +104,7 @@ X1=A.argsort(axis=0)
 C[N-1] = 0.0
 sumC = sum(C)
 
+#compute the time coefficient(choronos) and POD mode
 write_A = open('chronos/A.txt', 'w')
 for t1 in range(0,N,1) :
    loop_time = clock.time()
@@ -119,6 +124,7 @@ print '\nWriting the modes in txt files...\n'
 
 write_POD_time = open('mode/time_POD.txt', 'w')
 
+#write POD modes
 for t1 in range(0,nModes,1) :
    write_POD_time.write('%5e \n' % data_time[t1])
    write_POD_mode_Ux = open('./mode/mode_Ux.%s.txt' % (t1), 'w')
