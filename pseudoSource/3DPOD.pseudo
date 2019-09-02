@@ -4,16 +4,16 @@
 // unncesesarily complicated (i.e. sort eigenvalues from smallest to largest but then write them 
 // as largest to smallest on a text file) stuff out 
 
-Import the required libraries
+IMPORT the required libraries
 
-Take user inputs: 
+REQUEST user inputs: 
     1. Length of input data matrix (i.e. number of points)
     2. Number of snapshots
     3. Number of the first snapshots
     4. Number of modes to output up to a maximum of "Number of snapshots"
 
-Initialize variables:
-    X. The optimum number of variables to avoid excessive memory use is unclear
+INITIALIZE variables:
+    ?. The optimum number of variables to avoid excessive memory use is unclear...
     1. DATA     : 0*(3 times length of input data matrix)
     2. ALLDATA  : 0*(Size of DATA repeated by number of snapshots)
     3. TIME     : READ input file with an array of time units for which the snapshots were taken
@@ -62,3 +62,43 @@ FOR i : number of snapshots
         PODMODEZ = PODMODEZ + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Z)
     }
 
+// COMMENT outputting POD modes to folder /mode is redundant if we are also writing the modes in VTK
+
+INITIALIZE variables for writing to VTK:
+    1. NX,NY,NZ : numer of points of input data matrix in each direction
+    2. LX,LY,LZ : physical length of the input data matrix
+    3. XX,YY,ZZ : 0*(Matrix size NX by NY by NZ)
+    4. MODEUX   : 0*(Matrix size NX by NY by NZ)
+    5. MODEUY   : 0*(Matrix size NX by NY by NZ)
+    6. MODEUZ   : 0*(Matrix size NX by NY by NZ)
+    7. MODEU    : Unsure of size of this variable...
+
+CALCULATE distance between points and point coordinates as:
+{
+    DX = LX / (NX-1)    
+    DY = LY / (NY-1)    
+    DZ = LZ / (NZ-1)
+
+    X = Linearly space array from 0 to LX+DX with DX interval between elements   
+    Y = Linearly space array from 0 to LY+DY with DY interval between elements   
+    Z = Linearly space array from 0 to LZ+DZ with DZ interval between elements           
+}
+
+// COMMENT I feel this last section can be optimised or written better but I'm not sure how
+
+FOR idx : Number of modes to output
+    FOR k : NZ
+        FOR i : NX
+            FOR j : NY
+            
+            IF idx = 1
+                XX(i,j,k) = X(i)
+                YY(i,j,k) = Y(i)
+                ZZ(i,j,k) = Z(i)
+            
+            MODEUX = PODMODEX(i*NY + j + k*NY*NX, idx)            
+            MODEUY = PODMODEY(i*NY + j + k*NY*NX, idx)
+            MODEUZ = PODMODEZ(i*NY + j + k*NY*NX, idx)
+
+    MODEU = (MODEUX, MODEUY, MODEUZ)
+    WRITE to MODE_U_idx.vts MODEU using XX, YY, ZZ and a gridToVTK library
