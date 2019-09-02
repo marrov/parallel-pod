@@ -1,1 +1,64 @@
-Dummy for writing the pseudo code for the 3DPOD.py script
+// 3D POD pseudo-code based on 3DPOD_U.py
+
+// Note: it is not a line-by-line code as I left redundant (i.e. repeated matrices) and 
+// unncesesarily complicated (i.e. sort eigenvalues from smallest to largest but then write them 
+// as largest to smallest on a text file) stuff out 
+
+Import the required libraries
+
+Take user inputs: 
+    1. Length of input data matrix (i.e. number of points)
+    2. Number of snapshots
+    3. Number of the first snapshots
+    4. Number of modes to output up to a maximum of "Number of snapshots"
+
+Initialize variables:
+    X. The optimum number of variables to avoid excessive memory use is unclear
+    1. DATA     : 0*(3 times length of input data matrix)
+    2. ALLDATA  : 0*(Size of DATA repeated by number of snapshots)
+    3. TIME     : READ input file with an array of time units for which the snapshots were taken
+    4. PROJ     : 0*(Number of snapshots by number of snapshots)
+    5. EIGVAL   : Unsure of size of eigenvalues...
+    6. EIGVEC   : Unsure of size of eigenvectors...
+
+FOR number of snapshots
+    READ input data matrix into DATA
+    Include DATA into ALLDATA
+
+FOR i : number of snapshots
+    FOR j : number of snapshots
+        CALCULATE the projection matrix as:
+        {
+            PROJ(i,j) = dot product of ALLDATA(i) and transpose of ALLDATA(j)
+        }
+
+CALCULATE normalised projection matrix as:
+{
+    PROJ = PROJ multiplied by 1/Number of snapshots
+    // COMMENT Could this be included directly in the for loop above?
+}
+
+CALCULATE eigenvalues and eigenvectors as:
+{
+    EIGVAL, EIGVEC = eig function from a specific library of PROJ
+}
+
+EIGVAL = SORT eigenvalues from largest to smallest
+EIGVEC = SORT eigenvectors from largest to smallest
+
+WRITE the sorted eigenvalues to EIGVAL.TXT
+
+FOR i : number of snapshots
+    FOR j : number of snapshots
+        IF i is smaller than the number of modes to output
+            WRITE to CHRONOS.i.TXT the chronos of each mode as:
+            {
+                CHRONOS(i)= square root of [EIGVAL(i)*number of snapshots] times EIGVEC(j,i)
+            }
+    CALCULATE the PODMODE for each velocity component as:
+    {
+        PODMODEX = PODMODEX + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(X)
+        PODMODEY = PODMODEY + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Y)
+        PODMODEZ = PODMODEZ + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Z)
+    }
+
