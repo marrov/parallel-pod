@@ -27,5 +27,3 @@ In addition to learning more about parallel programming and MPI, a working imple
 - [ ] Identify linear algebra packages in C++ (serial and parallel)
 
 Key: OPT: optional, WIP: work in progess, (M): task for Marc
-
-Test from VS Code
