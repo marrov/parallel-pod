@@ -55,12 +55,12 @@ FOR i : number of snapshots
             {
                 CHRONOS(i)= square root of [EIGVAL(i)*number of snapshots] times EIGVEC(j,i)
             }
-    CALCULATE the PODMODE for each velocity component as:
-    {
-        PODMODEX = PODMODEX + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(X)
-        PODMODEY = PODMODEY + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Y)
-        PODMODEZ = PODMODEZ + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Z)
-    }
+        CALCULATE the PODMODE for each velocity component as:
+        {
+            PODMODEX = PODMODEX + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(X)
+            PODMODEY = PODMODEY + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Y)
+            PODMODEZ = PODMODEZ + (1/EIGVAL(i)*number of snapshots)*EIGVEC(j,i)*DATA(Z)
+        }
 
 // COMMENT outputting POD modes to folder /mode is redundant if we are also writing the modes in VTK
 
@@ -89,16 +89,16 @@ CALCULATE distance between points and point coordinates as:
 FOR idx : Number of modes to output
     FOR k : NZ
         FOR i : NX
-            FOR j : NY
-            
-            IF idx = 1
-                XX(i,j,k) = X(i)
-                YY(i,j,k) = Y(i)
-                ZZ(i,j,k) = Z(i)
-            
-            MODEUX = PODMODEX(i*NY + j + k*NY*NX, idx)            
-            MODEUY = PODMODEY(i*NY + j + k*NY*NX, idx)
-            MODEUZ = PODMODEZ(i*NY + j + k*NY*NX, idx)
+            FOR j : NY   
+                         
+                IF idx = 1
+                    XX(i,j,k) = X(i)
+                    YY(i,j,k) = Y(i)
+                    ZZ(i,j,k) = Z(i)
+    
+                MODEUX = PODMODEX(i*NY + j + k*NY*NX, idx)            
+                MODEUY = PODMODEY(i*NY + j + k*NY*NX, idx)
+                MODEUZ = PODMODEZ(i*NY + j + k*NY*NX, idx)
 
     MODEU = (MODEUX, MODEUY, MODEUZ)
     WRITE to MODE_U_idx.vts MODEU using XX, YY, ZZ and a gridToVTK library
