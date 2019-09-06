@@ -29,7 +29,7 @@ In addition to learning more about parallel programming and MPI, a working imple
 Key: OPT: optional, WIP: work in progess, (M): task for Marc, (S): task for Shen, (K): task for Kristian
 
 # Usefull libraries for C++ implementation
-(List of C++ template libraries)[https://en.wikipedia.org/wiki/List_of_C%2B%2B_template_libraries]
+[List of C++ template libraries](https://en.wikipedia.org/wiki/List_of_C%2B%2B_template_libraries):
 - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
 - [Boost](https://www.boost.org/doc/libs/1_66_0/libs/multi_array/doc/user.html)
 - [PETSc](https://www.mcs.anl.gov/petsc/)
