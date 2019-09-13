@@ -10,7 +10,5 @@ then
     time ./$cppbin
     printf "Done \n"
 else
-    printf "Compiling and running 3D POD script...\n\n"
-    g++ -std=c++11 -O3 -I ./eigen 3DPOD.cpp -o $cppbin; time ./$cppbin
-    printf "Done \n"
+    printf "$cppbin not found. Please compile and install.\n"
 fi
