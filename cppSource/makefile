@@ -14,10 +14,11 @@ endif
 #    target = .....
 #endif
 
-IDIR    := ../testCase/eigen/
+IDIR    := ../testCase/eigen/ ./depends/ezOptionParser/
 TEST_DIR:= ../testCase/
 CC      := g++
-CCFLAGS :=-std=c++11 -I$(IDIR) -O3 -g
+# Substitiutions used below. See https://www.gnu.org/software/make/manual/html_node/Substitution-Refs.html
+CCFLAGS :=-std=c++11 $(IDIR:%=-I%) -O3 -g 
 LDFLAGS :=
 
 #TARGETS := 3DPOD.out
