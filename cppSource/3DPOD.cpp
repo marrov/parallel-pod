@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include <Eigen/Dense>
+#include <ctime>
 
 #define MSIZE 381600 // Rows of matrix (number of points)
 #define TSIZE 5      // Size of time data (number of snapshots)
@@ -13,11 +14,14 @@ using namespace Eigen;
 
 int main()
 {
+    clock_t start,end;
+
     MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
     MatrixXd pm = MatrixXd::Zero(TSIZE, TSIZE);
 
     // READING INPUT FILES
 
+    start = clock();
     for (size_t k = 0; k < TSIZE; k++)
     {
         std::string dir = "input/U/";
@@ -42,9 +46,14 @@ int main()
             std::cout << " Unable to open file" << std::endl;
         }
     }
+    end = clock();
+    double runTime = (double)(end-start)/CLOCKS_PER_SEC;
+    std::cout << "Reading files takes "<< runTime << "s"<< std::endl;
+
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
+    start = clock();
     for (size_t i = 0; i < TSIZE; i++)
     {
         for (size_t j = 0; j < TSIZE; j++)
@@ -52,6 +61,9 @@ int main()
             pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
         }
     }
+    end = clock();
+    runTime = (double)(end-start)/CLOCKS_PER_SEC;
+    std::cout << "computing projection matrix takes "<< runTime << "s"<< std::endl;
 
     /*
     std::cout << "Normalised rojection Matrix:" << std::endl
@@ -60,12 +72,16 @@ int main()
 
     // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
 
+    start = clock();
     SelfAdjointEigenSolver<MatrixXd> eigensolver(pm);
     if (eigensolver.info() != Success)
         abort();
 
     VectorXd eigval = eigensolver.eigenvalues().reverse();
     MatrixXd eigvec = eigensolver.eigenvectors().rowwise().reverse();
+    end = clock();
+    runTime = (double)(end-start)/CLOCKS_PER_SEC;
+    std::cout << "eigen-decomposition takes "<< runTime << "s"<< std::endl;
 
     /*
     std::cout << "Sorted eigenvalues of Projection Matrix:\n"
@@ -89,6 +105,7 @@ int main()
     MatrixXd pody = MatrixXd::Zero(MSIZE, TSIZE);
     MatrixXd podz = MatrixXd::Zero(MSIZE, TSIZE);
 
+    start = clock();
     for (size_t i = 0; i < TSIZE; i++)
     {
         std::string chronos = "chronos/chronos_" + std::to_string(i) + ".dat";
@@ -108,9 +125,13 @@ int main()
 
         writeChronos.close();
     }
+    end = clock();
+    runTime = (double)(end-start)/CLOCKS_PER_SEC;
+    std::cout << "computing POD modes takes "<< runTime << "s"<< std::endl;
 
     // WRITING POD MODES
 
+    start = clock();
     for (size_t i = 0; i < NSIZE; i++)
     {
         std::string modex = "mode/mode_Ux_" + std::to_string(i) + ".dat";
@@ -138,4 +159,8 @@ int main()
             writeModez.close();
         }
     }
+    end = clock();
+    runTime = (double)(end-start)/CLOCKS_PER_SEC;
+    std::cout << "writing POD modes takes "<< runTime << "s"<< std::endl;
+
 }

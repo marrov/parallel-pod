@@ -62,6 +62,8 @@ POD_mode_Uz = np.zeros([MM,N],'float')
 
 #put velocity data and put into one big matrix (which we might could skip)
 print 'Creating database...\n'
+
+start_time = clock.time()
 for  t in range(N) :
     loop_time = clock.time()
     data_time[t] = time[t]
@@ -78,6 +80,7 @@ for  t in range(N) :
         data_time_U[i+1*MM,t] = data_Uy[i]
         data_time_U[i+2*MM,t] = data_Uz[i]
     print 'Reading input data %.0f of %.0f... executed in %.2f s' % (t, N, clock.time()-loop_time)
+print 'Reading input data executed in %.6f s' % (clock.time()-start_time)
 
 #####Proceed to POD analysis for the Q criterion
 #####################################################################################################
@@ -85,6 +88,7 @@ Loop_time = clock.time()
 print '\nComputing the correlation matrix for U... \n'
 
 #get the correlation matrix with the size of N (which is the reason snapshot pod takes much less time than normal POD)
+start_time = clock.time()
 for t1 in range(0,N,1) :
     for t2 in range(0,N,1) :
         data1 = data_time_U[:,t1]
@@ -92,11 +96,14 @@ for t1 in range(0,N,1) :
         projection_matrix[t1,t2]=np.dot(data1,np.transpose(data2))
 
 projection_matrix = (1.0/N)*projection_matrix
+print 'Computing the correlation matrix executed in %.2f s' % (clock.time()-start_time)
 
 print 'Calculating eigenvalues...\n'
 
 #get the eigenvalues and eigenvectors
+start_time = clock.time()
 [A,B]=np.linalg.eig(projection_matrix)
+print 'Eigenvalue decomposition executed in %.6f s' % (clock.time()-start_time)
 
 #order the eigenvalues the last one is the largest here
 C=np.msort(np.real(A))
@@ -105,6 +112,7 @@ C[N-1] = 0.0
 sumC = sum(C)
 
 #compute the time coefficient(choronos) and POD mode
+start_time = clock.time()
 write_A = open('chronos/A.txt', 'w')
 for t1 in range(0,N,1) :
    loop_time = clock.time()
@@ -119,12 +127,14 @@ for t1 in range(0,N,1) :
          POD_mode_Uy[:,t1] = POD_mode_Uy[:,t1] + (1/(A[t3]*N))* (np.sqrt(A[t3]*N)) * B[t2,t3] * data_time_Uy[:,t2]
          POD_mode_Uz[:,t1] = POD_mode_Uz[:,t1] + (1/(A[t3]*N))* (np.sqrt(A[t3]*N)) * B[t2,t3] * data_time_Uz[:,t2]
    print 'Computing POD mode %.0f of %.0f... executed in %.2f s' % (t1, N, clock.time()-loop_time)
+print 'Computing POD modes executed in %.6f s' % (clock.time()-start_time)
 
 print '\nWriting the modes in txt files...\n'
 
 write_POD_time = open('mode/time_POD.txt', 'w')
 
 #write POD modes
+start_time = clock.time()
 for t1 in range(0,nModes,1) :
    write_POD_time.write('%5e \n' % data_time[t1])
    write_POD_mode_Ux = open('./mode/mode_Ux.%s.txt' % (t1), 'w')
@@ -134,7 +144,7 @@ for t1 in range(0,nModes,1) :
       write_POD_mode_Ux.write('%5e \n' % POD_mode_Ux[i,(t1)])
       write_POD_mode_Uy.write('%5e \n' % POD_mode_Uy[i,(t1)])
       write_POD_mode_Uz.write('%5e \n' % POD_mode_Uz[i,(t1)])
-
+print 'Exporting POD modes in TXT executed in %.6f s' % (clock.time()-start_time)
 #####################################################################################################
 ##          Export the grid data in a vtk format readable by paraview
 #####################################################################################################
