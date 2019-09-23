@@ -3,6 +3,12 @@
 printf "Making directories if not present...\n\n"
 mkdir -p chronos/ mode/ VTK/
 
-printf "Running 3D POD script...\n\n"
-g++ -O3 -I ./eigen 3DPOD.cpp -o 3DPOD.out; time ./3DPOD.out
-printf "Done \n"
+cppbin="3DPOD.out"
+if [ -e ./"$cppbin" ]
+then
+    printf "Running 3D POD script...\n\n"
+    time ./$cppbin
+    printf "Done \n"
+else
+    printf "$cppbin not found. Please compile and install.\n"
+fi

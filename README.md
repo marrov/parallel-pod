@@ -20,11 +20,11 @@ In addition to learning more about parallel programming and MPI, a working imple
 # To-do list:
 - [ ] Make list of how the input data should be read (format, etc) and how it flows along the code
 - [X] (M) Make verification/test case (for RAW input) with run script
-- [ ] (M) Profile the python verification case 
+- [X] (M) Profile the python verification case 
 - [X] Understand the legacy python code and write the pseudo code version
-- [ ] WIP decide a coding style for C++
+- [X] WIP decide a coding style for C++
 - [ ] OPT define a validation case
-- [ ] Identify linear algebra packages in C++ (serial and parallel)
+- [X] Identify linear algebra packages in C++ (serial and parallel)
 
 Key: OPT: optional, WIP: work in progess, (M): task for Marc, (S): task for Shen, (K): task for Kristian
 

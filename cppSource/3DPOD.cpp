@@ -20,7 +20,7 @@ int main()
 
     for (size_t k = 0; k < TSIZE; k++)
     {
-        std::string dir = "U/";
+        std::string dir = "input/U/";
         std::string fname = "U_" + std::to_string(k + 1) + ".dat";
         std::ifstream file(dir + fname);
 
