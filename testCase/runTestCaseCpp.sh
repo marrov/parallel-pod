@@ -24,7 +24,9 @@ then
     printf "Running 3D POD script...\n\n"
     time ./$cppbin -i ./input/U -c ./chronos -m ./mode
     printf "Done \n"
+    exit 0
 else
     printf "$cppbin not found. Please compile and install.\n"
+    exit 1
 fi
 
