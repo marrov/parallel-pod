@@ -1,14 +1,30 @@
 #!/bin/bash
 
+if [[ ${OS} =~ "Windows_NT" ]]
+then
+    uname_S="Windows"
+else
+    uname_S="$(uname -s)"
+fi
+
+if [[ "${uname_S}" =~ "Windows" ]]
+then
+    echo "Running on Windows"
+    cppbin="3DPOD.exe"
+else
+    echo "Running on Linux"
+    cppbin="3DPOD.out"
+fi
+
 printf "Making directories if not present...\n\n"
 mkdir -p chronos/ mode/ VTK/
 
-cppbin="3DPOD.out"
 if [ -e ./"$cppbin" ]
 then
     printf "Running 3D POD script...\n\n"
-    time ./$cppbin
+    time ./$cppbin -i ./input/U -c ./chronos -m ./mode
     printf "Done \n"
 else
     printf "$cppbin not found. Please compile and install.\n"
 fi
+
