@@ -10,10 +10,10 @@
 #include <sys/stat.h>
 //#include <array>
 
-#define MSIZE 381600 // Rows of matrix (number of points)
-#define TSIZE 5      // Size of time data (number of snapshots)
-#define VSIZE 3      // Size of the variable (1 if scalar, 3 if vector)
-#define NSIZE 5      // Size of output POD modes (number of modes to write)
+//#define MSIZE 381600 // Rows of matrix (number of points)
+//#define TSIZE 5      // Size of time data (number of snapshots)
+//#define VSIZE 3      // Size of the variable (1 if scalar, 3 if vector)
+//#define NSIZE 5      // Size of output POD modes (number of modes to write)
 
 using namespace Eigen;
 
@@ -22,6 +22,22 @@ void pod(ez::ezOptionParser& opt)
     std::cout << "Starting POD routines" << std::endl;
 
     clock_t start,end;
+
+    // Rows of matrix (number of points)
+    long long MSIZE;
+    opt.get("-p")->getLongLong(MSIZE);
+
+    // Size of time data (number of snapshots)
+    long long TSIZE;
+    opt.get("-s")->getLongLong(TSIZE);
+
+    // Size of the variable (1 if scalar, 3 if vector)
+    long long VSIZE;
+    opt.get("-v")->getLongLong(VSIZE);
+
+    // Size of output POD modes (number of modes to write)
+    long long NSIZE;
+    opt.get("-nm")->getLongLong(NSIZE);
 
     MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
     MatrixXd pm = MatrixXd::Zero(TSIZE, TSIZE);
@@ -137,9 +153,9 @@ void pod(ez::ezOptionParser& opt)
                 writeChronos << std::scientific << std::setprecision(10) << sqrt(eigval(i) * TSIZE) * eigvec(j, i) << '\n';
             }
 
-            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block<MSIZE, 1>(0 * MSIZE, j);
-            pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block<MSIZE, 1>(1 * MSIZE, j);
-            podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block<MSIZE, 1>(2 * MSIZE, j);
+            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
+            pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
+            podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
         }
 
         writeChronos.close();
@@ -249,6 +265,48 @@ int main(int argc, const char * argv[]){
 		"--mode" // Flag token.
 	);
 
+    // Validator for unisgned long long (8 bytes). 
+    ez::ezOptionValidator* vU8 = new ez::ezOptionValidator("u8");
+    opt.add(
+		"", // Default.
+		1, // Required?
+		1, // Number of args expected.
+		0, // Delimiter if expecting multiple args.
+		"Number of points per snapshot.", // Help description.
+		"-p", // Flag token.
+        vU8 //Validate input
+	);
+
+    opt.add(
+		"", // Default.
+		1, // Required?
+		1, // Number of args expected.
+		0, // Delimiter if expecting multiple args.
+		"Number of sequential snapshots to use.", // Help description.
+		"-s", // Flag token.
+        vU8 //Validate input
+	);
+
+    opt.add(
+		"", // Default.
+		1, // Required?
+		1, // Number of args expected.
+		0, // Delimiter if expecting multiple args.
+		"Number of values per point.", // Help description.
+		"-v", // Flag token.
+        vU8 //Validate input
+	);
+
+    opt.add(
+		"", // Default.
+		1, // Required?
+		1, // Number of args expected.
+		0, // Delimiter if expecting multiple args.
+		"Number of modes to write. Must be less or equal to number of snapshots used.", // Help description.
+		"-nm", // Flag token.
+        vU8 //Validate input
+	);
+
     // Perform the actual parsing of the command line.
     opt.parse(argc, argv);
 
@@ -277,6 +335,20 @@ int main(int argc, const char * argv[]){
                 return 1;
             }
 	    }
+    }
+
+    // Check if number of snapshots compared to modes to write.
+    // Size of time data (number of snapshots)
+    long long TSIZE;
+    opt.get("-s")->getLongLong(TSIZE);
+    // Size of output POD modes (number of modes to write)
+    long long NSIZE;
+    opt.get("-nm")->getLongLong(NSIZE);
+    if(TSIZE <= NSIZE){
+        std::cerr << "ERROR: Number of modes to write must be less or equal to number of snapshots used.\n\n";
+
+        Usage(opt);
+        return 1;
     }
 
     std::vector<std::string> badOptions;
