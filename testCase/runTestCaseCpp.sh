@@ -13,7 +13,7 @@ then
     cppbin="3DPOD.exe"
 else
     echo "Running on Linux"
-    cppbin="3DPOD.out"
+    cppbin="../cppSource/3DPOD.out"
 fi
 
 printf "Making directories if not present...\n\n"
