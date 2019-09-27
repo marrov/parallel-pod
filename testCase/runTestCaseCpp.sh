@@ -22,7 +22,7 @@ mkdir -p chronos/ mode/ VTK/
 if [ -e ./"$cppbin" ]
 then
     printf "Running 3D POD script...\n\n"
-    time ./$cppbin -i ./input/U -c ./chronos -m ./mode
+    time ./$cppbin -i ./input/U100 -c ./chronos -m ./mode -p 381600 -v 3 -nm 5 -s 10
     printf "Done \n"
     exit 0
 else
