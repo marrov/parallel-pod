@@ -5,10 +5,10 @@ else
 endif
 
 ifeq ($(uname_S), Windows)
-    TARGETS = 3DPOD.exe
+    TARGETS = P3DPOD.exe
 endif
 ifeq ($(uname_S), Linux)
-    TARGETS = 3DPOD.out
+    TARGETS = P3DPOD_parser.out
 endif
 #ifeq ($(uname_S), .....) #See https://stackoverflow.com/a/27776822/938111
 #    target = .....
@@ -18,7 +18,7 @@ IDIR    := ../testCase/eigen/ ./depends/ezOptionParser/
 TEST_DIR:= ../testCase/
 CC      := g++
 # Substitiutions used below. See https://www.gnu.org/software/make/manual/html_node/Substitution-Refs.html
-CCFLAGS :=-std=c++11 $(IDIR:%=-I%) -O3
+CCFLAGS :=-std=c++11 $(IDIR:%=-I%) -O3 -fopenmp
 LDFLAGS :=
 
 #TARGETS := 3DPOD.out
@@ -33,6 +33,6 @@ clean:
 install_to_test: all
 	install $(TARGETS) $(TEST_DIR)
 
-$(TARGETS): 3DPOD.cpp
+$(TARGETS): P3DPOD_parser.cpp
 	$(CC) -o $@ $^ $(CCFLAGS)
 
