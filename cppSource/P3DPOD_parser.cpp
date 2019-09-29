@@ -95,7 +95,7 @@ void pod(ez::ezOptionParser &opt)
                     file >> m(i + MSIZE * j, k);
                 }
             }
-            std::cout << "Finished reading file " + std::to_string(k + 1) + " of \t" + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
+            std::cout << "Finished reading file " + std::to_string(k + 1) + " \t of " + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
 
             file.close();
         }
