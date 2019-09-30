@@ -15,9 +15,10 @@ using namespace Eigen;
 
 void pod(ez::ezOptionParser &opt)
 {
-    std::cout << "Starting POD routines" << std::endl;
+    double start, end;
 
-    clock_t start, end;
+    std::cout << "Starting POD routines \n"
+              << std::endl;
 
     // Rows of matrix (number of points)
     long long MSIZE;
@@ -68,17 +69,11 @@ void pod(ez::ezOptionParser &opt)
         }
     }
 
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        std::cout << t[i] << std::endl;
-    }
-
     // READING INPUT FILES
 
-    start = clock();
-    
+    start = omp_get_wtime();
+    std::cout << "Reading files..." << std::flush;
     MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
-
 #pragma omp parallel
 #pragma omp for
     for (size_t k = 0; k < TSIZE; k++)
@@ -95,25 +90,28 @@ void pod(ez::ezOptionParser &opt)
                     file >> m(i + MSIZE * j, k);
                 }
             }
-            std::cout << "Finished reading file " + std::to_string(k + 1) + " \t of " + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
+
+            // IF VERBOSE do print which file
+            //std::cout << "Finished reading file " + std::to_string(k + 1) + " \t of " + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
 
             file.close();
         }
         else
         {
-            std::cout << " Unable to open file" << std::endl;
+            std::cout << "Unable to open file" << std::endl;
         }
     }
-    end = clock();
-    double runTime = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << "Reading files takes " << runTime << "s" << std::endl;
-
-/*
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
-    start = clock();
+    start = omp_get_wtime();
+    std::cout << "Computing projection matrix..." << std::flush;
     MatrixXd pm = MatrixXd::Zero(TSIZE, TSIZE);
+#pragma omp parallel
+#pragma omp for
     for (size_t i = 0; i < TSIZE; i++)
     {
         for (size_t j = 0; j < TSIZE; j++)
@@ -121,100 +119,114 @@ void pod(ez::ezOptionParser &opt)
             pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
         }
     }
-    end = clock();
-    runTime = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << "computing projection matrix takes " << runTime << "s" << std::endl;
+    end = omp_get_wtime();
+    std::cout << "\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
     // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
 
-    start = clock();
+    start = omp_get_wtime();
+    std::cout << "Computing eigenvalues and eigenvectors..." << std::flush;
     SelfAdjointEigenSolver<MatrixXd> eigensolver(pm);
     if (eigensolver.info() != Success)
         abort();
 
     VectorXd eigval = eigensolver.eigenvalues().reverse();
     MatrixXd eigvec = eigensolver.eigenvectors().rowwise().reverse();
-    end = clock();
-    runTime = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << "eigen-decomposition takes " << runTime << "s" << std::endl;
+    end = omp_get_wtime();
+    std::cout << "\t Done in " << end - start << "s \n"
+              << std::endl;
+
+    // COMPUTING POD MODES
+
+    start = omp_get_wtime();
+    std::cout << "Computing POD modes..." << std::flush;
+    MatrixXd podx = MatrixXd::Zero(MSIZE, TSIZE);
+    MatrixXd pody = MatrixXd::Zero(MSIZE, TSIZE);
+    MatrixXd podz = MatrixXd::Zero(MSIZE, TSIZE);
+#pragma omp parallel
+#pragma omp for
+    for (size_t i = 0; i < TSIZE; i++)
+    {
+        for (size_t j = 0; j < TSIZE; j++)
+        {
+            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
+            pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
+            podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
+        }
+    }
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
     // WRITING SORTED EIGENVALUES
 
+    start = omp_get_wtime();
+    std::cout << "Writing eigenvalues..." << std::flush;
     std::ofstream writeEigval(dir_chronos + "/A.txt");
     if (writeEigval.is_open())
     {
         writeEigval << std::scientific << std::setprecision(10) << eigval;
         writeEigval.close();
     }
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
-    // COMPUTING POD MODES AND WRITING CHRONOS FOR EACH MODE
+    // WRITING CHRONOS
 
-    MatrixXd podx = MatrixXd::Zero(MSIZE, TSIZE);
-    MatrixXd pody = MatrixXd::Zero(MSIZE, TSIZE);
-    MatrixXd podz = MatrixXd::Zero(MSIZE, TSIZE);
-
-    start = clock();
-    for (size_t i = 0; i < TSIZE; i++)
+    start = omp_get_wtime();
+    std::cout << "Writing chronos..." << std::flush;
+#pragma omp parallel
+#pragma omp for
+    for (size_t i = 0; i < NSIZE; i++)
     {
-        //std::string chronos = "chronos/chronos_" + std::to_string(i) + ".dat";
-        std::string chronos = dir_chronos + "/chronos_" + std::to_string(i) + ".dat";
-        std::ofstream writeChronos(chronos);
-
+        std::ofstream writeChronos(dir_chronos + "/chronos_" + std::to_string(i) + ".dat");
         for (size_t j = 0; j < TSIZE; j++)
         {
-            if (i <= NSIZE)
-            {
-                writeChronos << std::scientific << std::setprecision(10) << sqrt(eigval(i) * TSIZE) * eigvec(j, i) << '\n';
-            }
-
-            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
-            pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
-            podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
+            writeChronos << std::scientific << std::setprecision(10) << sqrt(eigval(i) * TSIZE) * eigvec(j, i) << '\n';
         }
-
         writeChronos.close();
     }
-    end = clock();
-    runTime = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << "computing POD modes takes " << runTime << "s" << std::endl;
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
     // WRITING POD MODES
 
-    start = clock();
-    for (size_t i = 0; i < NSIZE; i++)
+    start = omp_get_wtime();
+    std::cout << "Writing POD modes..." << std::flush;
+    std::string xyz = "xyz_";
+#pragma omp parallel
+#pragma omp for
+    for (size_t j = 0; j < VSIZE; j++)
     {
-        //std::string modex = "mode/mode_Ux_" + std::to_string(i) + ".dat";
-        std::string modex = dir_mode + "/mode_Ux_" + std::to_string(i) + ".dat";
-        //std::string modey = "mode/mode_Uy_" + std::to_string(i) + ".dat";
-        std::string modey = dir_mode + "/mode_Uy_" + std::to_string(i) + ".dat";
-        //std::string modez = "mode/mode_Uz_" + std::to_string(i) + ".dat";
-        std::string modez = dir_mode + "/mode_Uz_" + std::to_string(i) + ".dat";
-
-        std::ofstream writeModex(modex);
-        if (writeModex.is_open())
+        for (size_t i = 0; i < NSIZE; i++)
         {
-            writeModex << std::scientific << std::setprecision(6) << podx.col(i);
-            writeModex.close();
-        }
+            std::string modeTail = std::to_string(i) + ".dat";
 
-        std::ofstream writeModey(modey);
-        if (writeModey.is_open())
-        {
-            writeModey << std::scientific << std::setprecision(6) << pody.col(i);
-            writeModey.close();
-        }
-
-        std::ofstream writeModez(modez);
-        if (writeModez.is_open())
-        {
-            writeModez << std::scientific << std::setprecision(6) << podz.col(i);
-            writeModez.close();
+            std::ofstream writeMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + modeTail);
+            if (writeMode.is_open())
+            {
+                if (j == 0)
+                {
+                    writeMode << std::scientific << std::setprecision(6) << podx.col(i);
+                }
+                else if (j == 1)
+                {
+                    writeMode << std::scientific << std::setprecision(6) << pody.col(i);
+                }
+                else if (j == 2)
+                {
+                    writeMode << std::scientific << std::setprecision(6) << podz.col(i);
+                }
+                writeMode.close();
+            }
         }
     }
-    end = clock();
-    runTime = (double)(end - start) / CLOCKS_PER_SEC;
-    std::cout << "writing POD modes takes " << runTime << "s" << std::endl;
-    */
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 }
 
 void Usage(ez::ezOptionParser &opt)
