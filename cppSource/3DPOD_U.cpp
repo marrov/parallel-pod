@@ -203,9 +203,7 @@ void pod(ez::ezOptionParser &opt)
     {
         for (size_t i = 0; i < NSIZE; i++)
         {
-            std::string modeTail = std::to_string(i) + ".dat";
-
-            std::ofstream writeMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + modeTail);
+            std::ofstream writeMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + std::to_string(i) + ".dat");
             if (writeMode.is_open())
             {
                 if (j == 0)

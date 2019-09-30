@@ -8,7 +8,7 @@ ifeq ($(uname_S), Windows)
     TARGETS = 3DPOD_U.exe
 endif
 ifeq ($(uname_S), Linux)
-    TARGETS = 3DPOD_U.out
+    TARGETS = 3DPOD_U.out 
 endif
 #ifeq ($(uname_S), .....) #See https://stackoverflow.com/a/27776822/938111
 #    target = .....
