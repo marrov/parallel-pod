@@ -5,10 +5,10 @@ else
 endif
 
 ifeq ($(uname_S), Windows)
-    TARGETS = 3DPOD_U.exe
+    EXECEND = .exe
 endif
 ifeq ($(uname_S), Linux)
-    TARGETS = 3DPOD_U.out 
+    EXECEND = .out
 endif
 #ifeq ($(uname_S), .....) #See https://stackoverflow.com/a/27776822/938111
 #    target = .....
@@ -21,7 +21,8 @@ CC      := g++
 CCFLAGS :=-std=c++11 $(IDIR:%=-I%) -O3 -fopenmp
 LDFLAGS :=
 
-#TARGETS := 3DPOD.out
+NAMES   := 3DPOD_U 3DPOD_s
+TARGETS := $(NAMES:%=%$(EXECEND))
 
 .PHONY: all clean install_to_test
 
@@ -33,6 +34,7 @@ clean:
 install_to_test: all
 	install $(TARGETS) $(TEST_DIR)
 
-$(TARGETS): 3DPOD_U.cpp
+# Pattern rule used below. See https://www.gnu.org/software/make/manual/html_node/Pattern-Intro.html#Pattern-Intro
+%$(EXECEND): %.cpp
 	$(CC) -o $@ $^ $(CCFLAGS)
-
+    

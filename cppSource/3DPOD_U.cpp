@@ -126,7 +126,7 @@ void pod(ez::ezOptionParser &opt)
 
     int SPOD_Fl = 1; // Flag to apply SPOD - 1 = on
     int SPOD_Ty = 2; // Filter type - 1 = box, 2 = gauss
-    int SPOD_Nf = 4; // Filter size, Nf
+    int SPOD_Nf = 5; // Filter size, Nf
 
     if (SPOD_Fl == 1)
     {
