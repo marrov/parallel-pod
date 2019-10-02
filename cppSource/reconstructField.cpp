@@ -17,7 +17,7 @@ void pod(ez::ezOptionParser &opt)
 {
     double start, end;
 
-    std::cout << "Starting POD routines \n"
+    std::cout << "Starting reconstruction routines \n"
               << std::endl;
 
     // Rows of matrix (number of points)
@@ -32,7 +32,7 @@ void pod(ez::ezOptionParser &opt)
     long long VSIZE;
     opt.get("-v")->getLongLong(VSIZE);
 
-    // Size of output POD modes (number of modes to write)
+    // Size of input POD modes (number of modes to use in reconstruction)
     long long NSIZE;
     opt.get("-nm")->getLongLong(NSIZE);
 
@@ -40,8 +40,12 @@ void pod(ez::ezOptionParser &opt)
     long long PSIZE;
     opt.get("-np")->getLongLong(PSIZE);
 
-    std::string dir_input;
-    opt.get("--input")->getString(dir_input);
+    // Number of reconstructed time instants to output
+    long long RSIZE;
+    opt.get("-nr")->getLongLong(RSIZE);
+
+    std::string dir_rec;
+    opt.get("--reconstruct")->getString(dir_rec);
 
     std::string dir_chronos;
     opt.get("--chronos")->getString(dir_chronos);
@@ -49,215 +53,120 @@ void pod(ez::ezOptionParser &opt)
     std::string dir_mode;
     opt.get("--mode")->getString(dir_mode);
 
+    // READING MODE FILES
+
     omp_set_num_threads(PSIZE);
-
-    // GENERATING TIME STRING
-
-    std::vector<std::string> t(TSIZE);
-    std::string tname = "times_pointCloud.txt";
-    std::ifstream timefile(dir_input + "/" + tname);
-
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        if (timefile.is_open())
-        {
-            timefile >> t[i];
-            while (t[i].back() == '0') // Remove trailing zeros
-            {
-                t[i].pop_back();
-            }
-        }
-    }
-
-    // READING INPUT FILES
-
     start = omp_get_wtime();
-    std::cout << "Reading files..." << std::flush;
-    MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
+    std::cout << "Reading modes..." << std::flush;
+    MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, NSIZE);
+    std::string xyz = "xyz_";
 #pragma omp parallel
 #pragma omp for
-    for (size_t k = 0; k < TSIZE; k++)
+    for (size_t k = 0; k < NSIZE; k++)
     {
-        std::string dir = dir_input + "/pointCloud/" + t[k] + "/pointCloud_s.xy";
-        std::ifstream file(dir);
-
-        if (file.is_open())
+        for (size_t j = 0; j < VSIZE; j++)
         {
-            for (size_t i = 0; i < MSIZE; i++)
+            std::ifstream readMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + std::to_string(k) + ".dat");
+
+            if (readMode.is_open())
             {
-                for (size_t j = 0; j < VSIZE; j++)
+                for (size_t i = 0; i < MSIZE; i++)
                 {
-                    file >> m(i + MSIZE * j, k);
+                    readMode >> m(i + MSIZE * j, k);
                 }
             }
-            // IF VERBOSE do print which file
-            //std::cout << "Finished reading file " + std::to_string(k + 1) + " \t of " + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
+            else
+            {
+                std::cout << "Unable to open file" << std::endl;
+            }
+            readMode.close();
+        }
+    }
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
 
-            file.close();
+    // READING CHRONOS FILES
+    start = omp_get_wtime();
+    std::cout << "Reading chronos..." << std::flush;
+    MatrixXd c = MatrixXd::Zero(TSIZE, NSIZE);
+#pragma omp parallel
+#pragma omp for
+    for (size_t j = 0; j < NSIZE; j++)
+    {
+
+        std::ifstream readChronos(dir_chronos + "/chronos_" + std::to_string(j) + ".dat");
+
+        if (readChronos.is_open())
+        {
+            for (size_t i = 0; i < TSIZE; i++)
+            {
+                readChronos >> c(i, j);
+            }
         }
         else
         {
             std::cout << "Unable to open file" << std::endl;
         }
+        readChronos.close();
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
               << std::endl;
 
-    // COMPUTING NORMALISED PROJECTION MATRIX
+    // COMPUTE RECONSTRUCTED FIELDS
 
     start = omp_get_wtime();
-    std::cout << "Computing projection matrix..." << std::flush;
-    MatrixXd pm = MatrixXd::Zero(TSIZE, TSIZE);
+    std::cout << "Computing reconstructed fields..." << std::flush;
+    MatrixXd recx = MatrixXd::Zero(MSIZE, RSIZE);
+    MatrixXd recy = MatrixXd::Zero(MSIZE, RSIZE);
+    MatrixXd recz = MatrixXd::Zero(MSIZE, RSIZE);
 #pragma omp parallel
 #pragma omp for
-    for (size_t i = 0; i < TSIZE; i++)
+    for (size_t i = 0; i < RSIZE; i++)
     {
-        for (size_t j = 0; j < TSIZE; j++)
+        for (size_t j = 0; j < NSIZE; j++)
         {
-            pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
+            recx.col(i) = recx.col(i) + c(i, j) * m.block(0 * MSIZE, j, MSIZE, 1);
+            recy.col(i) = recy.col(i) + c(i, j) * m.block(1 * MSIZE, j, MSIZE, 1);
+            recz.col(i) = recz.col(i) + c(i, j) * m.block(2 * MSIZE, j, MSIZE, 1);
+        }
+    }
+    end = omp_get_wtime();
+    std::cout << "\t\t Done in " << end - start << "s \n"
+              << std::endl;
+
+    // WRITE RECONSTRUCTED FIELDS
+
+    start = omp_get_wtime();
+    std::cout << "Writing reconstructed fields..." << std::flush;
+#pragma omp parallel
+#pragma omp for
+    for (size_t i = 0; i < RSIZE; i++)
+    {
+        for (size_t j = 0; j < VSIZE; j++)
+        {
+            std::ofstream writeField(dir_rec + "/U" + xyz.at(j) + xyz.at(3) + std::to_string(i) + ".dat");
+            if (writeField.is_open())
+            {
+                if (j == 0)
+                {
+                    writeField << std::scientific << std::setprecision(10) << recx.col(i);
+                }
+                else if (j == 1)
+                {
+                    writeField << std::scientific << std::setprecision(10) << recy.col(i);
+                }
+                else if (j == 2)
+                {
+                    writeField << std::scientific << std::setprecision(10) << recz.col(i);
+                }
+            }
+            writeField.close();
         }
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // APPLY SPECTRAL POD FILTER IF DESIRED
-
-    int SPOD_Fl = 1; // Flag to apply SPOD - 1 = on
-    int SPOD_Ty = 2; // Filter type - 1 = box, 2 = gauss
-    int SPOD_Nf = 5; // Filter size, Nf
-
-    if (SPOD_Fl == 1)
-    {
-        start = omp_get_wtime();
-        std::cout << "Filtering projection matrix for SPOD..." << std::flush;
-
-        int nfSize = 2 * SPOD_Nf + 1;
-
-        VectorXd g = VectorXd::Ones(nfSize);
-
-        if (SPOD_Ty == 2)
-        {
-            VectorXd gauss = VectorXd::LinSpaced(nfSize, -2.285, 2.285);
-            g = exp(-square(gauss.array()));
-        }
-
-        g = g / g.sum();
-
-        size_t idx = 0;
-
-        MatrixXd spm = MatrixXd::Zero(TSIZE, TSIZE);
-        MatrixXd pmExt = MatrixXd::Zero(TSIZE * 3, TSIZE * 3);
-
-        pmExt = pm.replicate(3, 3).block(TSIZE - SPOD_Nf, TSIZE - SPOD_Nf, TSIZE + 2 * SPOD_Nf, TSIZE + 2 * SPOD_Nf);
-
-        for (int i = 0; i < TSIZE; i++)
-        {
-            for (int j = 0; j < TSIZE; j++)
-            {
-                for (int k = -SPOD_Nf; k < SPOD_Nf + 1; k++)
-                {
-                    spm(i, j) = spm(i, j) + g(idx) * pmExt(i + k + SPOD_Nf, j + k + SPOD_Nf);
-                    idx++;
-                }
-                idx = 0;
-            }
-        }
-
-        pm = spm; // Load spectral projection matrix on previous projection matrix
-
-        end = omp_get_wtime();
-        std::cout << "\t\t Done in " << end - start << "s \n"
-                  << std::endl;
-    }
-
-    // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
-
-    start = omp_get_wtime();
-    std::cout << "Computing eigenvalues and eigenvectors..." << std::flush;
-    SelfAdjointEigenSolver<MatrixXd> eigensolver(pm);
-    if (eigensolver.info() != Success)
-        abort();
-
-    VectorXd eigval = eigensolver.eigenvalues().reverse();
-    MatrixXd eigvec = eigensolver.eigenvectors().rowwise().reverse();
-    end = omp_get_wtime();
-    std::cout << "\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // COMPUTING POD MODES
-
-    start = omp_get_wtime();
-    std::cout << "Computing POD modes..." << std::flush;
-    MatrixXd podx = MatrixXd::Zero(MSIZE, TSIZE);
-#pragma omp parallel
-#pragma omp for
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        for (size_t j = 0; j < TSIZE; j++)
-        {
-            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0, j, MSIZE, 1);
-        }
-    }
-    end = omp_get_wtime();
-    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // WRITING SORTED EIGENVALUES
-
-    start = omp_get_wtime();
-    std::cout << "Writing eigenvalues..." << std::flush;
-    std::ofstream writeEigval(dir_chronos + "/A.txt");
-    if (writeEigval.is_open())
-    {
-        writeEigval << std::scientific << std::setprecision(10) << eigval;
-        writeEigval.close();
-    }
-    end = omp_get_wtime();
-    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // WRITING CHRONOS
-
-    start = omp_get_wtime();
-    std::cout << "Writing chronos..." << std::flush;
-#pragma omp parallel
-#pragma omp for
-    for (size_t i = 0; i < NSIZE; i++)
-    {
-        std::ofstream writeChronos(dir_chronos + "/chronos_" + std::to_string(i) + ".dat");
-        for (size_t j = 0; j < TSIZE; j++)
-        {
-            writeChronos << std::scientific << std::setprecision(10) << sqrt(eigval(i) * TSIZE) * eigvec(j, i) << '\n';
-        }
-        writeChronos.close();
-    }
-    end = omp_get_wtime();
-    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // WRITING POD MODES
-
-    start = omp_get_wtime();
-    std::cout << "Writing POD modes..." << std::flush;
-    std::string xyz = "xyz_";
-#pragma omp parallel
-#pragma omp for
-    for (size_t j = 0; j < VSIZE; j++)
-    {
-        for (size_t i = 0; i < NSIZE; i++)
-        {
-            std::ofstream writeMode(dir_mode + "/mode_s" + xyz.at(3) + std::to_string(i) + ".dat");
-            if (writeMode.is_open())
-            {
-                writeMode << std::scientific << std::setprecision(6) << podx.col(i);
-                writeMode.close();
-            }
-        }
-    }
-    end = omp_get_wtime();
-    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
               << std::endl;
 }
 
@@ -295,10 +204,10 @@ int main(int argc, const char *argv[])
         1,                  // Number of args expected.
         0,                  // Delimiter if expecting multiple args.
         "Input directory.", // Help description.
-        "-i",               // Flag token.
-        "-inp",             // Flag token.
-        "-input",           // Flag token.
-        "--input"           // Flag token.
+        "-r",               // Flag token.
+        "-rec",             // Flag token.
+        "-reconstruct",     // Flag token.
+        "--reconstruct"     // Flag token.
     );
 
     opt.add(
@@ -358,13 +267,13 @@ int main(int argc, const char *argv[])
     );
 
     opt.add(
-        "",                                                                             // Default.
-        1,                                                                              // Required?
-        1,                                                                              // Number of args expected.
-        0,                                                                              // Delimiter if expecting multiple args.
-        "Number of modes to write. Must be less or equal to number of snapshots used.", // Help description.
-        "-nm",                                                                          // Flag token.
-        vU8                                                                             //Validate input
+        "",                                                                        // Default.
+        1,                                                                         // Required?
+        1,                                                                         // Number of args expected.
+        0,                                                                         // Delimiter if expecting multiple args.
+        "Number of modes to read (i.e. number of modes to use in reconstruction)", // Help description.
+        "-nm",                                                                     // Flag token.
+        vU8                                                                        //Validate input
     );
 
     opt.add(
@@ -375,6 +284,16 @@ int main(int argc, const char *argv[])
         "Number of parallel threads.", // Help description.
         "-np",                         // Flag token.
         vU8                            //Validate input
+    );
+
+    opt.add(
+        "",                                                 // Default.
+        1,                                                  // Required?
+        1,                                                  // Number of args expected.
+        0,                                                  // Delimiter if expecting multiple args.
+        "Number of reconstructed time instants to output.", // Help description.
+        "-nr",                                              // Flag token.
+        vU8                                                 //Validate input
     );
 
     // Perform the actual parsing of the command line.
@@ -389,7 +308,7 @@ int main(int argc, const char *argv[])
     // Perform validations of input parameters.
     //
     // Check if directories exist.
-    std::array<std::string, 3> dirflags = {"-i", "-c", "-m"};
+    std::array<std::string, 3> dirflags = {"-r", "-c", "-m"};
     for (auto &dirflag : dirflags)
     {
         if (opt.isSet(dirflag))
@@ -412,16 +331,26 @@ int main(int argc, const char *argv[])
         }
     }
 
-    // Check if number of snapshots compared to modes to write.
+    // Check if number of snapshots compared to modes to read.
     // Size of time data (number of snapshots)
     long long TSIZE;
     opt.get("-s")->getLongLong(TSIZE);
-    // Size of output POD modes (number of modes to write)
+    // Size of output POD modes (number of modes to read)
     long long NSIZE;
     opt.get("-nm")->getLongLong(NSIZE);
     if (TSIZE <= NSIZE)
     {
-        std::cerr << "ERROR: Number of modes to write must be less or equal to number of snapshots used.\n\n";
+        std::cerr << "ERROR: Number of modes to read must be less or equal to number of snapshots used.\n\n";
+
+        Usage(opt);
+        return 1;
+    }
+
+    long long RSIZE;
+    opt.get("-nm")->getLongLong(RSIZE);
+    if (TSIZE <= RSIZE)
+    {
+        std::cerr << "ERROR: Number of reconstructed time instants to read must be less or equal to number of snapshots used.\n\n";
 
         Usage(opt);
         return 1;

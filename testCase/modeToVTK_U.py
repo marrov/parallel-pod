@@ -57,6 +57,11 @@ for i in range(0,N,1):
   POD_mode_Ux[:,i] = np.loadtxt('output/sortedModes/U/mode_Ux_%s.dat' % i, skiprows=0)
   POD_mode_Uy[:,i] = np.loadtxt('output/sortedModes/U/mode_Uy_%s.dat' % i, skiprows=0)
   POD_mode_Uz[:,i] = np.loadtxt('output/sortedModes/U/mode_Uz_%s.dat' % i, skiprows=0)
+   
+  #POD_mode_Ux[:,i] = np.loadtxt('output/reconstruct/Ux_%s.dat' % i, skiprows=0)
+  #POD_mode_Uy[:,i] = np.loadtxt('output/reconstruct/Uy_%s.dat' % i, skiprows=0)
+  #POD_mode_Uz[:,i] = np.loadtxt('output/reconstruct/Uz_%s.dat' % i, skiprows=0)
+
   print 'Finished reading POD mode %.0f of %.0f' % (i+1, N)
 
 print '\nWriting the modes in VTK files...\n'

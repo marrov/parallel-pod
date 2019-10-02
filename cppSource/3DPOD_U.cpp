@@ -32,11 +32,11 @@ void pod(ez::ezOptionParser &opt)
     long long VSIZE;
     opt.get("-v")->getLongLong(VSIZE);
 
-    // Size of output POD modes (number of modes to write)
+    // Size of input POD modes (number of modes to write)
     long long NSIZE;
     opt.get("-nm")->getLongLong(NSIZE);
 
-    // Size of output POD modes (number of modes to write)
+    // Number of parallel threads
     long long PSIZE;
     opt.get("-np")->getLongLong(PSIZE);
 
@@ -165,7 +165,7 @@ void pod(ez::ezOptionParser &opt)
             }
         }
 
-        pm = spm; // Load spectral projection matrix on previous projection matrix
+        pm = spm;
 
         end = omp_get_wtime();
         std::cout << "\t\t Done in " << end - start << "s \n"
