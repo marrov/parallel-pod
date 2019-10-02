@@ -49,8 +49,6 @@ void pod(ez::ezOptionParser &opt)
     std::string dir_mode;
     opt.get("--mode")->getString(dir_mode);
 
-    omp_set_num_threads(PSIZE);
-
     // GENERATING TIME STRING
 
     std::vector<std::string> t(TSIZE);
@@ -71,6 +69,7 @@ void pod(ez::ezOptionParser &opt)
 
     // READING INPUT FILES
 
+    omp_set_num_threads(PSIZE);
     start = omp_get_wtime();
     std::cout << "Reading files..." << std::flush;
     MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
@@ -122,6 +121,56 @@ void pod(ez::ezOptionParser &opt)
     end = omp_get_wtime();
     std::cout << "\t\t\t Done in " << end - start << "s \n"
               << std::endl;
+
+    // APPLY SPECTRAL POD FILTER IF DESIRED
+
+    int SPOD_Fl = 1; // Flag to apply SPOD - 1 = on
+    int SPOD_Ty = 2; // Filter type - 1 = box, 2 = gauss
+    int SPOD_Nf = 5; // Filter size, Nf
+
+    if (SPOD_Fl == 1)
+    {
+        start = omp_get_wtime();
+        std::cout << "Filtering projection matrix for SPOD..." << std::flush;
+
+        int nfSize = 2 * SPOD_Nf + 1;
+
+        VectorXd g = VectorXd::Ones(nfSize);
+
+        if (SPOD_Ty == 2)
+        {
+            VectorXd gauss = VectorXd::LinSpaced(nfSize, -2.285, 2.285);
+            g = exp(-square(gauss.array()));
+        }
+
+        g = g / g.sum();
+
+        size_t idx = 0;
+
+        MatrixXd spm = MatrixXd::Zero(TSIZE, TSIZE);
+        MatrixXd pmExt = MatrixXd::Zero(TSIZE * 3, TSIZE * 3);
+
+        pmExt = pm.replicate(3, 3).block(TSIZE - SPOD_Nf, TSIZE - SPOD_Nf, TSIZE + 2 * SPOD_Nf, TSIZE + 2 * SPOD_Nf);
+
+        for (int i = 0; i < TSIZE; i++)
+        {
+            for (int j = 0; j < TSIZE; j++)
+            {
+                for (int k = -SPOD_Nf; k < SPOD_Nf + 1; k++)
+                {
+                    spm(i, j) = spm(i, j) + g(idx) * pmExt(i + k + SPOD_Nf, j + k + SPOD_Nf);
+                    idx++;
+                }
+                idx = 0;
+            }
+        }
+
+        pm = spm; // Load spectral projection matrix on previous projection matrix
+
+        end = omp_get_wtime();
+        std::cout << "\t\t Done in " << end - start << "s \n"
+                  << std::endl;
+    }
 
     // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
 

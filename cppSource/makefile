@@ -37,4 +37,4 @@ install_to_test: all
 # Pattern rule used below. See https://www.gnu.org/software/make/manual/html_node/Pattern-Intro.html#Pattern-Intro
 %$(EXECEND): %.cpp
 	$(CC) -o $@ $^ $(CCFLAGS)
-
+    
