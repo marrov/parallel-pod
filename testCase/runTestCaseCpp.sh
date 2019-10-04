@@ -22,11 +22,11 @@ mkdir -p output/chronos/ output/mode/ output/VTK/
 if [ -e ./"$cppbin" ]
 then
     printf "Running 3D POD script...\n\n"
-    time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 5 -s 200 -np 6
+    time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 200 -s 200 -np 6
 
     # Matlab sort modes
     #printf "\nRunning Matlab sorting script for modes...\n"
-    matlab -nodisplay -nosplash -nodesktop -r "run('sortModes.m');exit;"
+    #matlab -nodisplay -nosplash -nodesktop -r "run('sortModes.m');exit;"
 
     # Python sorted modes to VTK
     #printf "\nRunning Python mode to VTK script...\n\n"

@@ -124,7 +124,7 @@ void pod(ez::ezOptionParser &opt)
 
     // APPLY SPECTRAL POD FILTER IF DESIRED
 
-    int SPOD_Fl = 1; // Flag to apply SPOD - 1 = on
+    int SPOD_Fl = 0; // Flag to apply SPOD - 1 = on
     int SPOD_Ty = 2; // Filter type - 1 = box, 2 = gauss
     int SPOD_Nf = 5; // Filter size, Nf
 
@@ -434,7 +434,7 @@ int main(int argc, const char *argv[])
     // Size of output POD modes (number of modes to write)
     long long NSIZE;
     opt.get("-nm")->getLongLong(NSIZE);
-    if (TSIZE <= NSIZE)
+    if (TSIZE < NSIZE)
     {
         std::cerr << "ERROR: Number of modes to write must be less or equal to number of snapshots used.\n\n";
 

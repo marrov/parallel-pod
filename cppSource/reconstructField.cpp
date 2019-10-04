@@ -127,9 +127,9 @@ void pod(ez::ezOptionParser &opt)
     {
         for (size_t j = 0; j < NSIZE; j++)
         {
-            recx.col(i) = recx.col(i) + c(i, j) * m.block(0 * MSIZE, j, MSIZE, 1);
-            recy.col(i) = recy.col(i) + c(i, j) * m.block(1 * MSIZE, j, MSIZE, 1);
-            recz.col(i) = recz.col(i) + c(i, j) * m.block(2 * MSIZE, j, MSIZE, 1);
+                recx.col(i) = recx.col(i) + c(i, j) * m.block(0 * MSIZE, j, MSIZE, 1);
+                recy.col(i) = recy.col(i) + c(i, j) * m.block(1 * MSIZE, j, MSIZE, 1);
+                recz.col(i) = recz.col(i) + c(i, j) * m.block(2 * MSIZE, j, MSIZE, 1);
         }
     }
     end = omp_get_wtime();
@@ -338,7 +338,7 @@ int main(int argc, const char *argv[])
     // Size of output POD modes (number of modes to read)
     long long NSIZE;
     opt.get("-nm")->getLongLong(NSIZE);
-    if (TSIZE <= NSIZE)
+    if (TSIZE < NSIZE)
     {
         std::cerr << "ERROR: Number of modes to read must be less or equal to number of snapshots used.\n\n";
 
@@ -348,7 +348,7 @@ int main(int argc, const char *argv[])
 
     long long RSIZE;
     opt.get("-nm")->getLongLong(RSIZE);
-    if (TSIZE <= RSIZE)
+    if (TSIZE < RSIZE)
     {
         std::cerr << "ERROR: Number of reconstructed time instants to read must be less or equal to number of snapshots used.\n\n";
 

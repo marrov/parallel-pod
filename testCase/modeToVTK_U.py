@@ -24,7 +24,7 @@ start_time = clock.time()
 # size of the snapshot
 MM = 381600
 # number of snapshots
-N = 5
+N = 200
 
 #Definition of the grid for writing a vtk file with this solution
 nx, ny, nz = 106, 60, 60
@@ -61,6 +61,10 @@ for i in range(0,N,1):
   #POD_mode_Ux[:,i] = np.loadtxt('output/reconstruct/Ux_%s.dat' % i, skiprows=0)
   #POD_mode_Uy[:,i] = np.loadtxt('output/reconstruct/Uy_%s.dat' % i, skiprows=0)
   #POD_mode_Uz[:,i] = np.loadtxt('output/reconstruct/Uz_%s.dat' % i, skiprows=0)
+
+  #POD_mode_Ux[:,i] = np.loadtxt('output/sortedModes/U/Ux_%s.dat' % i, skiprows=0)
+  #POD_mode_Uy[:,i] = np.loadtxt('output/sortedModes/U/Uy_%s.dat' % i, skiprows=0)
+  #POD_mode_Uz[:,i] = np.loadtxt('output/sortedModes/U/Uz_%s.dat' % i, skiprows=0)
 
   print 'Finished reading POD mode %.0f of %.0f' % (i+1, N)
 

@@ -9,7 +9,8 @@ clear; close all; clc;
 
 flag_U = 1; % 0: scalar, 1: velocity
 
-N = 5; % Number of modes
+%N = 5; % Number of modes
+N = 200;
 
 coord = 'xyz';
 
@@ -40,6 +41,7 @@ for i = 1:N
         for j = 1:3
 
             mode = dlmread(strcat('output/mode/mode_U', coord(j), '_', num2str(i - 1), '.dat'));
+            %mode = dlmread(strcat('output/data/U', coord(j), '_', num2str(i - 1), '.dat'));
 
             orig(:, end) = mode; % substitute 4th-6th columns for velocity
 
