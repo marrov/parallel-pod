@@ -115,7 +115,7 @@ void pod(ez::ezOptionParser &opt)
     {
         for (size_t j = 0; j < TSIZE; j++)
         {
-            pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
+            pm(j, i) = pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
         }
     }
     end = omp_get_wtime();
@@ -158,7 +158,7 @@ void pod(ez::ezOptionParser &opt)
             {
                 for (int k = -SPOD_Nf; k < SPOD_Nf + 1; k++)
                 {
-                    spm(i, j) = spm(i, j) + g(idx) * pmExt(i + k + SPOD_Nf, j + k + SPOD_Nf);
+                    spm(i, j) += g(idx) * pmExt(i + k + SPOD_Nf, j + k + SPOD_Nf);
                     idx++;
                 }
                 idx = 0;
@@ -199,9 +199,13 @@ void pod(ez::ezOptionParser &opt)
     {
         for (size_t j = 0; j < TSIZE; j++)
         {
-            podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
-            pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
-            podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
+            //podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
+            //pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
+            //podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
+
+            podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * MSIZE, j, MSIZE, 1);
+            pody.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(1 * MSIZE, j, MSIZE, 1);
+            podz.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(2 * MSIZE, j, MSIZE, 1);
         }
     }
     end = omp_get_wtime();
