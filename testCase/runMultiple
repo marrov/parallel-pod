@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cppbin="../cppSource/3DPOD_U.out"
+
+time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 5 -s 200 -np 1 > logs/log.run_np_1 2>&1
+time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 5 -s 200 -np 2 > logs/log.run_np_2 2>&1
+time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 5 -s 200 -np 3 > logs/log.run_np_3 2>&1
+time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 5 -s 200 -np 4 > logs/log.run_np_4 2>&1
