@@ -109,15 +109,7 @@ void pod(ez::ezOptionParser &opt)
     start = omp_get_wtime();
     std::cout << "Computing projection matrix..." << std::flush;
     MatrixXd pm = MatrixXd::Zero(TSIZE, TSIZE);
-#pragma omp parallel
-#pragma omp for
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        for (size_t j = 0; j < TSIZE; j++)
-        {
-            pm(j, i) = pm(i, j) = (1.0 / TSIZE) * (m.col(i).dot(m.col(j).transpose()));
-        }
-    }
+    pm = (1.0 / TSIZE) * m.transpose() * m;
     end = omp_get_wtime();
     std::cout << "\t\t\t Done in " << end - start << "s \n"
               << std::endl;
