@@ -22,7 +22,16 @@ mkdir -p output/chronos/ output/mode/ output/VTK/
 if [ -e ./"$cppbin" ]
 then
     printf "Running 3D POD script...\n\n"
-    time ./$cppbin -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 200 -s 200 -np 6
+    # time ./$cppbin -i ./input/pointCloud/ -c output/chronos -m output/mode -p 381600 -v 3 -nm 10 -s 50 -np 6
+    time ./$cppbin -i ./input/pointCloud/ \
+        -tf ./input/times_pointCloud.txt \
+        -pcfn pointCloud_U.xy \
+        -c output/chronos \
+        -m output/mode \
+        -p 381600 \
+        -v 3 \
+        -nm 10 \
+        -np 6
 
     # Matlab sort modes
     #printf "\nRunning Matlab sorting script for modes...\n"

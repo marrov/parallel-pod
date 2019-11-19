@@ -10,8 +10,35 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
+#include <iterator>
+#include <algorithm>
 
 using namespace Eigen;
+
+/*
+Function for reading the input file containing all the itme entries to use.
+*/
+std::vector<std::string> read_timefile(const std::string tfile) 
+{
+    /* Open and read file with list of times */
+    std::ifstream timefile(tfile);
+    std::vector<std::string> t_entr;  
+
+    if (timefile.is_open()) 
+    {
+        /* Count number of words in file. This should correspond to the
+        number of snapshots to use. */
+        std::string line;
+        
+        while (getline(timefile, line))
+        {
+            t_entr.push_back (line);
+        }        
+    }
+    timefile.close();
+
+    return t_entr;
+}
 
 void pod(ez::ezOptionParser &opt)
 {
@@ -24,9 +51,11 @@ void pod(ez::ezOptionParser &opt)
     long long MSIZE;
     opt.get("-p")->getLongLong(MSIZE);
 
+    /*
     // Size of time data (number of snapshots)
     long long TSIZE;
     opt.get("-s")->getLongLong(TSIZE);
+    */
 
     // Size of the variable (1 if scalar, 3 if vector)
     long long VSIZE;
@@ -49,23 +78,17 @@ void pod(ez::ezOptionParser &opt)
     std::string dir_mode;
     opt.get("--mode")->getString(dir_mode);
 
+    std::string tname;
+    opt.get("-tf")->getString(tname);
+
+    std::string pcname;
+    opt.get("-pcfn")->getString(pcname);
+
     // GENERATING TIME STRING
-
-    std::vector<std::string> t(TSIZE);
-    std::string tname = "times_pointCloud.txt";
-    std::ifstream timefile(dir_input + "/" + tname);
-
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        if (timefile.is_open())
-        {
-            timefile >> t[i];
-            while (t[i].back() == '0') // Remove trailing zeros
-            {
-                t[i].pop_back();
-            }
-        }
-    }
+    std::vector<std::string> t;
+    
+    t = read_timefile(tname);
+    long TSIZE = t.size();   // Determine number of snapshots from time entry list
 
     // READING INPUT FILES
 
@@ -77,7 +100,7 @@ void pod(ez::ezOptionParser &opt)
 #pragma omp for
     for (size_t k = 0; k < TSIZE; k++)
     {
-        std::string dir = dir_input + "/pointCloud/" + t[k] + "/pointCloud_U.xy";
+        std::string dir = dir_input + "/" + t[k] + "/" + pcname;
         std::ifstream file(dir);
 
         if (file.is_open())
@@ -301,11 +324,29 @@ int main(int argc, const char *argv[])
     );
 
     opt.add(
+        "",                            // Default.
+        1,                             // Required?
+        1,                             // Number of args expected.
+        0,                             // Delimiter if expecting multiple args.
+        "File with time snapshot list",// Help description.
+        "-tf"                          // Flag token.
+    );
+
+    opt.add(
+        "",                            // Default.
+        1,                             // Required?
+        1,                             // Number of args expected.
+        0,                             // Delimiter if expecting multiple args.
+        "Point cloud file name (in time directories).",// Help description.
+        "-pcfn"                        // Flag token.
+    );
+
+    opt.add(
         "",                 // Default.
         1,                  // Required?
         1,                  // Number of args expected.
         0,                  // Delimiter if expecting multiple args.
-        "Input directory.", // Help description.
+        "Directory where the time directories reside as sub-directories.", // Help description.
         "-i",               // Flag token.
         "-inp",             // Flag token.
         "-input",           // Flag token.
@@ -348,6 +389,7 @@ int main(int argc, const char *argv[])
         vU8                               //Validate input
     );
 
+    /*
     opt.add(
         "",                                       // Default.
         1,                                        // Required?
@@ -357,6 +399,7 @@ int main(int argc, const char *argv[])
         "-s",                                     // Flag token.
         vU8                                       //Validate input
     );
+    */
 
     opt.add(
         "",                            // Default.
@@ -423,6 +466,7 @@ int main(int argc, const char *argv[])
         }
     }
 
+    /*
     // Check if number of snapshots compared to modes to write.
     // Size of time data (number of snapshots)
     long long TSIZE;
@@ -437,6 +481,7 @@ int main(int argc, const char *argv[])
         Usage(opt);
         return 1;
     }
+    */
 
     std::vector<std::string> badOptions;
     int i;
@@ -463,4 +508,5 @@ int main(int argc, const char *argv[])
         firstArg = *opt.firstArgs[0];
 
     pod(opt);
+    return 0;
 }
