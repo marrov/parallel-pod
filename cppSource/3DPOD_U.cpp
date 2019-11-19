@@ -90,6 +90,15 @@ void pod(ez::ezOptionParser &opt)
     t = read_timefile(tname);
     long TSIZE = t.size();   // Determine number of snapshots from time entry list
 
+    /* Check whether the requested number of modes to write is larger than
+    the number of snapshots. If so, set the number of modes to the number of
+    snapshots.*/
+    if (NSIZE > TSIZE){
+        std::cout << "Modes to write exceed available snapshots. Adjusted.\n" << std::flush; 
+        NSIZE = TSIZE;
+    }
+
+
     // READING INPUT FILES
 
     omp_set_num_threads(PSIZE);
