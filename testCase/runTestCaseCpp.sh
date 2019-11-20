@@ -28,7 +28,6 @@ then
         -pcfn pointCloud_U.xy \
         -c output/chronos \
         -m output/mode \
-        -p 381600 \
         -v 3 \
         -nm 10 \
         -np 6
