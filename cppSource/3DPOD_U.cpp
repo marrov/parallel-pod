@@ -43,8 +43,6 @@ std::vector<std::string> read_timefile(const std::string tfile)
 /*
 Parse the point cloud files and populate matrix with data.
 */
-//void read_pcfs_to_matrix(const std::vector<std::string> * fvec,
-//                         long no_cols, int offset_cols=0)
 long read_pcfs_to_matrix(MatrixXd * m,
                          const std::vector<std::string> * fvec,
                          long no_cols, int offset_cols=0)                         
@@ -53,7 +51,6 @@ long read_pcfs_to_matrix(MatrixXd * m,
 
     if (verbose) {
         std::ostream_iterator<std::string> out_it (std::cout,"\n");
-        //std::copy ((*fvec).begin(), (*fvec).end(), out_it);
         std::copy (fvec->begin(), fvec->end(), out_it);
     }
     
@@ -80,15 +77,12 @@ long read_pcfs_to_matrix(MatrixXd * m,
     vector of files */
     long TSIZE = fvec->size();
 
-    /* Declare and define matrix to store the file content */
-    //MatrixXd m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
+    /* Define matrix to store the file content */
     *m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
 #pragma omp parallel
 #pragma omp for
     for (size_t k = 0; k < TSIZE; k++)
     {
-        //std::string dir = dir_input + "/" + t[k] + "/" + pcfname;
-        //std::ifstream file(dir);
         std::ifstream file((*fvec)[k]);
 
         if (file.is_open())
@@ -110,10 +104,7 @@ long read_pcfs_to_matrix(MatrixXd * m,
     }
 
     return REF_MSIZE;
-    //return &m;
-    //exit(100);
 }
-
 
 
 void pod(ez::ezOptionParser &opt)
@@ -122,18 +113,6 @@ void pod(ez::ezOptionParser &opt)
 
     std::cout << "Starting POD routines \n"
               << std::endl;
-
-    /*
-    // Rows of matrix (number of points)
-    long long MSIZE;
-    opt.get("-p")->getLongLong(MSIZE);
-    */
-
-    /*
-    // Size of time data (number of snapshots)
-    long long TSIZE;
-    opt.get("-s")->getLongLong(TSIZE);
-    */
 
     // Size of the variable (1 if scalar, 3 if vector)
     long long VSIZE;
@@ -190,71 +169,12 @@ void pod(ez::ezOptionParser &opt)
 
     MatrixXd m;
     start = omp_get_wtime();
-    //std::cout << "Reading files with function..." << std::flush;
-    //read_pcfs_to_matrix(&pcfs, (long) VSIZE);
     std::cout << "Reading files..." << std::flush;
     auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long) VSIZE);
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
               << std::endl;
     
-
-    /* Establish a reference number of points for checking the problem size.
-    The size is determined from the point cloud file in the first time 
-    directory. */
-    /*long REF_MSIZE = 0; 
-    std::string ref_fname = dir_input + "/" + t[0] + "/" + pcfname;
-    std::string unused_line;  
-
-    std::ifstream ref_file(ref_fname);
-    if (ref_file.is_open()) 
-    {
-        while (getline(ref_file, unused_line)) REF_MSIZE++;        
-    }
-    ref_file.close();
-    // std::cout << "Ref no points are " << REF_NSIZE << std::flush;
-
-    start = omp_get_wtime();
-    std::cout << "Reading files..." << std::flush;
-    MatrixXd m = MatrixXd::Zero(REF_MSIZE * VSIZE, TSIZE);
-#pragma omp parallel
-#pragma omp for
-    for (size_t k = 0; k < TSIZE; k++)
-    {
-        std::string dir = dir_input + "/" + t[k] + "/" + pcfname;
-        std::ifstream file(dir);
-
-        if (file.is_open())
-        {
-            for (size_t i = 0; i < REF_MSIZE; i++)
-            {
-                for (size_t j = 0; j < VSIZE; j++)
-                {
-                    file >> m(i + REF_MSIZE * j, k);
-                }
-            }
-
-            // IF VERBOSE do print which file
-            //std::cout << "Finished reading file " + std::to_string(k + 1) + " \t of " + std::to_string(TSIZE) << " by thread " << omp_get_thread_num() << std::endl;
-
-            file.close();
-        }
-        else
-        {
-            std::cout << "Unable to open file" << std::endl;
-        }
-    }
-    end = omp_get_wtime();
-    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-
-    // COMPARING GENERATED MATRICES
-    if (m.isApprox(mf))
-        std::cout << "Matrices are equal\n" << std::endl;
-    else
-        std::cout << "WRONG!" << std::endl;
-    exit(100);
-    */
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
@@ -508,30 +428,6 @@ int main(int argc, const char *argv[])
 
     // Validator for unisgned long long (8 bytes).
     ez::ezOptionValidator *vU8 = new ez::ezOptionValidator("u8");
-    /*
-    opt.add(
-        "",                               // Default.
-        1,                                // Required?
-        1,                                // Number of args expected.
-        0,                                // Delimiter if expecting multiple args.
-        "Number of points per snapshot.", // Help description.
-        "-p",                             // Flag token.
-        vU8                               //Validate input
-    );
-    */
-
-    /*
-    opt.add(
-        "",                                       // Default.
-        1,                                        // Required?
-        1,                                        // Number of args expected.
-        0,                                        // Delimiter if expecting multiple args.
-        "Number of sequential snapshots to use.", // Help description.
-        "-s",                                     // Flag token.
-        vU8                                       //Validate input
-    );
-    */
-
     opt.add(
         "",                            // Default.
         1,                             // Required?
@@ -596,23 +492,6 @@ int main(int argc, const char *argv[])
             }
         }
     }
-
-    /*
-    // Check if number of snapshots compared to modes to write.
-    // Size of time data (number of snapshots)
-    long long TSIZE;
-    opt.get("-s")->getLongLong(TSIZE);
-    // Size of output POD modes (number of modes to write)
-    long long NSIZE;
-    opt.get("-nm")->getLongLong(NSIZE);
-    if (TSIZE < NSIZE)
-    {
-        std::cerr << "ERROR: Number of modes to write must be less or equal to number of snapshots used.\n\n";
-
-        Usage(opt);
-        return 1;
-    }
-    */
 
     std::vector<std::string> badOptions;
     int i;
