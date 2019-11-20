@@ -68,6 +68,7 @@ void pod(ez::ezOptionParser &opt)
     // Number of parallel threads
     long long PSIZE;
     opt.get("-np")->getLongLong(PSIZE);
+    omp_set_num_threads(PSIZE);
 
     std::string dir_input;
     opt.get("--input")->getString(dir_input);
@@ -81,8 +82,8 @@ void pod(ez::ezOptionParser &opt)
     std::string tname;
     opt.get("-tf")->getString(tname);
 
-    std::string pcname;
-    opt.get("-pcfn")->getString(pcname);
+    std::string pcfname;
+    opt.get("-pcfn")->getString(pcfname);
 
     // GENERATING TIME STRING
     std::vector<std::string> t;
@@ -92,7 +93,7 @@ void pod(ez::ezOptionParser &opt)
 
     /* Check whether the requested number of modes to write is larger than
     the number of snapshots. If so, set the number of modes to the number of
-    snapshots.*/
+    snapshots. */
     if (NSIZE > TSIZE){
         std::cout << "Modes to write exceed available snapshots. Adjusted.\n" << std::flush; 
         NSIZE = TSIZE;
@@ -101,24 +102,38 @@ void pod(ez::ezOptionParser &opt)
 
     // READING INPUT FILES
 
-    omp_set_num_threads(PSIZE);
+    /* Establish a reference number of points for checking the problem size.
+    The size is determined from the point cloud file in the first time 
+    directory. */
+    long REF_MSIZE = 0; 
+    std::string ref_fname = dir_input + "/" + t[0] + "/" + pcfname;
+    std::string unused_line;  
+
+    std::ifstream ref_file(ref_fname);
+    if (ref_file.is_open()) 
+    {
+        while (getline(ref_file, unused_line)) REF_MSIZE++;        
+    }
+    ref_file.close();
+    // std::cout << "Ref no points are " << REF_NSIZE << std::flush;
+
     start = omp_get_wtime();
     std::cout << "Reading files..." << std::flush;
-    MatrixXd m = MatrixXd::Zero(MSIZE * VSIZE, TSIZE);
+    MatrixXd m = MatrixXd::Zero(REF_MSIZE * VSIZE, TSIZE);
 #pragma omp parallel
 #pragma omp for
     for (size_t k = 0; k < TSIZE; k++)
     {
-        std::string dir = dir_input + "/" + t[k] + "/" + pcname;
+        std::string dir = dir_input + "/" + t[k] + "/" + pcfname;
         std::ifstream file(dir);
 
         if (file.is_open())
         {
-            for (size_t i = 0; i < MSIZE; i++)
+            for (size_t i = 0; i < REF_MSIZE; i++)
             {
                 for (size_t j = 0; j < VSIZE; j++)
                 {
-                    file >> m(i + MSIZE * j, k);
+                    file >> m(i + REF_MSIZE * j, k);
                 }
             }
 
