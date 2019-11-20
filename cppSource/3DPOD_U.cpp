@@ -47,9 +47,11 @@ void pod(ez::ezOptionParser &opt)
     std::cout << "Starting POD routines \n"
               << std::endl;
 
+    /*
     // Rows of matrix (number of points)
     long long MSIZE;
     opt.get("-p")->getLongLong(MSIZE);
+    */
 
     /*
     // Size of time data (number of snapshots)
@@ -229,9 +231,9 @@ void pod(ez::ezOptionParser &opt)
 
     start = omp_get_wtime();
     std::cout << "Computing POD modes..." << std::flush;
-    MatrixXd podx = MatrixXd::Zero(MSIZE, TSIZE);
-    MatrixXd pody = MatrixXd::Zero(MSIZE, TSIZE);
-    MatrixXd podz = MatrixXd::Zero(MSIZE, TSIZE);
+    MatrixXd podx = MatrixXd::Zero(REF_MSIZE, TSIZE);
+    MatrixXd pody = MatrixXd::Zero(REF_MSIZE, TSIZE);
+    MatrixXd podz = MatrixXd::Zero(REF_MSIZE, TSIZE);
 #pragma omp parallel
 #pragma omp for
     for (size_t i = 0; i < TSIZE; i++)
@@ -242,9 +244,9 @@ void pod(ez::ezOptionParser &opt)
             //pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
             //podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
 
-            podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * MSIZE, j, MSIZE, 1);
-            pody.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(1 * MSIZE, j, MSIZE, 1);
-            podz.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(2 * MSIZE, j, MSIZE, 1);
+            podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * REF_MSIZE, j, REF_MSIZE, 1);
+            pody.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(1 * REF_MSIZE, j, REF_MSIZE, 1);
+            podz.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(2 * REF_MSIZE, j, REF_MSIZE, 1);
         }
     }
     end = omp_get_wtime();
@@ -403,6 +405,7 @@ int main(int argc, const char *argv[])
 
     // Validator for unisgned long long (8 bytes).
     ez::ezOptionValidator *vU8 = new ez::ezOptionValidator("u8");
+    /*
     opt.add(
         "",                               // Default.
         1,                                // Required?
@@ -412,6 +415,7 @@ int main(int argc, const char *argv[])
         "-p",                             // Flag token.
         vU8                               //Validate input
     );
+    */
 
     /*
     opt.add(
