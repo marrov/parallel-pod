@@ -40,6 +40,82 @@ std::vector<std::string> read_timefile(const std::string tfile)
     return t_entr;
 }
 
+/*
+Parse the point cloud files and populate matrix with data.
+*/
+//void read_pcfs_to_matrix(const std::vector<std::string> * fvec,
+//                         long no_cols, int offset_cols=0)
+long read_pcfs_to_matrix(MatrixXd * m,
+                         const std::vector<std::string> * fvec,
+                         long no_cols, int offset_cols=0)                         
+{
+    bool verbose = false;
+
+    if (verbose) {
+        std::ostream_iterator<std::string> out_it (std::cout,"\n");
+        //std::copy ((*fvec).begin(), (*fvec).end(), out_it);
+        std::copy (fvec->begin(), fvec->end(), out_it);
+    }
+    
+    /* Establish a reference number of points for checking the problem size.
+    The size is determined from the point cloud file in the first time 
+    directory. */
+    long REF_MSIZE = 0; 
+    std::string ref_fname = *(fvec->begin());
+    std::string unused_line;
+
+    std::ifstream ref_file(ref_fname);
+    if (ref_file.is_open()) 
+    {
+        while (getline(ref_file, unused_line)) REF_MSIZE++;        
+    }
+    ref_file.close();
+
+    if (verbose) {
+        std::cout << "From file " << ref_fname << std::endl;
+        std::cout << "found " << REF_MSIZE << " points" << std::endl;
+    }
+
+    /* Number of time samples to consider is determined from the length of the
+    vector of files */
+    long TSIZE = fvec->size();
+
+    /* Declare and define matrix to store the file content */
+    //MatrixXd m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
+    *m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
+#pragma omp parallel
+#pragma omp for
+    for (size_t k = 0; k < TSIZE; k++)
+    {
+        //std::string dir = dir_input + "/" + t[k] + "/" + pcfname;
+        //std::ifstream file(dir);
+        std::ifstream file((*fvec)[k]);
+
+        if (file.is_open())
+        {
+            for (size_t i = 0; i < REF_MSIZE; i++)
+            {
+                for (size_t j = 0; j < no_cols; j++)
+                {
+                    file >> (*m)(i + REF_MSIZE * j, k);
+                }
+            }
+
+            file.close();
+        }
+        else
+        {
+            std::cerr << "Unable to open file" << std::endl;
+        }
+    }
+
+    return REF_MSIZE;
+    //return &m;
+    //exit(100);
+}
+
+
+
 void pod(ez::ezOptionParser &opt)
 {
     double start, end;
@@ -104,10 +180,29 @@ void pod(ez::ezOptionParser &opt)
 
     // READING INPUT FILES
 
+    /* Build a string array with all file names to be read into the matrix */
+    std::vector<std::string> pcfs;
+    for (std::vector<std::string>::iterator it = t.begin(); it != t.end(); ++it)
+    {
+        std::string name_temp = dir_input + "/" + *it + "/" + pcfname;
+        pcfs.push_back(name_temp);
+    }
+
+    MatrixXd m;
+    start = omp_get_wtime();
+    //std::cout << "Reading files with function..." << std::flush;
+    //read_pcfs_to_matrix(&pcfs, (long) VSIZE);
+    std::cout << "Reading files..." << std::flush;
+    auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long) VSIZE);
+    end = omp_get_wtime();
+    std::cout << "\t\t\t\t Done in " << end - start << "s \n"
+              << std::endl;
+    
+
     /* Establish a reference number of points for checking the problem size.
     The size is determined from the point cloud file in the first time 
     directory. */
-    long REF_MSIZE = 0; 
+    /*long REF_MSIZE = 0; 
     std::string ref_fname = dir_input + "/" + t[0] + "/" + pcfname;
     std::string unused_line;  
 
@@ -152,6 +247,14 @@ void pod(ez::ezOptionParser &opt)
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
               << std::endl;
+
+    // COMPARING GENERATED MATRICES
+    if (m.isApprox(mf))
+        std::cout << "Matrices are equal\n" << std::endl;
+    else
+        std::cout << "WRONG!" << std::endl;
+    exit(100);
+    */
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
