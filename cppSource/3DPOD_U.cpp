@@ -16,24 +16,39 @@
 using namespace Eigen;
 
 /*
+Function for splitting strings into a vector datatype.
+*/
+std::vector<std::string> split_string(const std::string& s, char delimiter)
+{
+std::vector<std::string> tokens;
+std::string token;
+std::istringstream tokenStream(s);
+while (std::getline(tokenStream, token, delimiter))
+{
+    tokens.push_back(token);
+}
+return tokens;
+}
+
+/*
 Function for reading the input file containing all the itme entries to use.
 */
-std::vector<std::string> read_timefile(const std::string tfile) 
+std::vector<std::string> read_timefile(const std::string tfile)
 {
     /* Open and read file with list of times */
     std::ifstream timefile(tfile);
-    std::vector<std::string> t_entr;  
+    std::vector<std::string> t_entr;
 
-    if (timefile.is_open()) 
+    if (timefile.is_open())
     {
         /* Count number of words in file. This should correspond to the
         number of snapshots to use. */
         std::string line;
-        
+
         while (getline(timefile, line))
         {
-            t_entr.push_back (line);
-        }        
+            t_entr.push_back(line);
+        }
     }
     timefile.close();
 
@@ -43,32 +58,37 @@ std::vector<std::string> read_timefile(const std::string tfile)
 /*
 Parse the point cloud files and populate matrix with data.
 */
-long read_pcfs_to_matrix(MatrixXd * m,
-                         const std::vector<std::string> * fvec,
-                         long no_cols, int offset_cols=0)                         
+long read_pcfs_to_matrix(MatrixXd *m,
+                        const std::vector<std::string> *fvec,
+                        const long no_cols, 
+                        //std::vector<int> cols_to_read)
+                        const long offset)
 {
     bool verbose = false;
 
-    if (verbose) {
-        std::ostream_iterator<std::string> out_it (std::cout,"\n");
-        std::copy (fvec->begin(), fvec->end(), out_it);
+    if (verbose)
+    {
+        std::ostream_iterator<std::string> out_it(std::cout, "\n");
+        std::copy(fvec->begin(), fvec->end(), out_it);
     }
-    
+
     /* Establish a reference number of points for checking the problem size.
     The size is determined from the point cloud file in the first time 
     directory. */
-    long REF_MSIZE = 0; 
+    long REF_MSIZE = 0;
     std::string ref_fname = *(fvec->begin());
     std::string unused_line;
 
     std::ifstream ref_file(ref_fname);
-    if (ref_file.is_open()) 
+    if (ref_file.is_open())
     {
-        while (getline(ref_file, unused_line)) REF_MSIZE++;        
+        while (getline(ref_file, unused_line))
+            REF_MSIZE++;
     }
     ref_file.close();
 
-    if (verbose) {
+    if (verbose)
+    {
         std::cout << "From file " << ref_fname << std::endl;
         std::cout << "found " << REF_MSIZE << " points" << std::endl;
     }
@@ -79,44 +99,74 @@ long read_pcfs_to_matrix(MatrixXd * m,
 
     /* Define matrix to store the file content */
     *m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
+    double dummy = 0;
 #pragma omp parallel
 #pragma omp for
-    for (size_t k = 0; k < TSIZE; k++)
+    for (size_t snapshot = 0; snapshot < TSIZE; snapshot++)
     {
-        std::ifstream file((*fvec)[k]);
+        std::ifstream file((*fvec)[snapshot]);
 
         if (file.is_open())
         {
-            for (size_t i = 0; i < REF_MSIZE; i++)
+            for (size_t row_idx = 0; row_idx < REF_MSIZE; row_idx++)
             {
-                for (size_t j = 0; j < no_cols; j++)
+                for (size_t col_no = 0, j=0; col_no < (no_cols+offset); col_no++)
                 {
-                    file >> (*m)(i + REF_MSIZE * j, k);
+                    if (col_no<offset)
+                        file >> dummy;
+                    else
+                    {
+                        file >> (*m)(row_idx + REF_MSIZE * j, snapshot);
+                        j++;
+                    }
                 }
             }
+            
+            /*
+            std::string line;
+            std::vector<std::string> tokens;
+            char delimiter = '\n';
+            unsigned long row_idx=0, col_idx=0;
+            while (std::getline(file, line, delimiter))
+            //for(;;std::getline(file, line, delimiter))
+            {
+                tokens = split_string(line, ' ');
 
+                // for(std::vector<std::string>::iterator it = tokens.begin(); 
+                //     it != tokens.end(); ++it)
+                for(col_idx=0; col_idx<no_cols; col_idx++)
+                {
+                    auto tmp_val = tokens[(cols_to_read[col_idx]-1)];
+                    (*m)(row_idx + REF_MSIZE*col_idx, snapshot) = std::stod(tmp_val);
+                }
+            }
+            */
+            
             file.close();
         }
         else
         {
-            std::cerr << "Unable to open file" << std::endl;
+            std::cerr << "Unable to open file " << (*fvec)[snapshot] << std::endl;
         }
     }
 
     return REF_MSIZE;
 }
 
-
 void pod(ez::ezOptionParser &opt)
 {
     double start, end;
 
     std::cout << "Starting POD routines \n"
-              << std::endl;
+            << std::endl;
 
     // Size of the variable (1 if scalar, 3 if vector)
     long long VSIZE;
     opt.get("-v")->getLongLong(VSIZE);
+
+    // Offset to (column number of) the first column to read from.
+    long long OFFSET;
+    opt.get("-pcfco")->getLongLong(OFFSET);
 
     // Size of input POD modes (number of modes to write)
     long long NSIZE;
@@ -144,18 +194,19 @@ void pod(ez::ezOptionParser &opt)
 
     // GENERATING TIME STRING
     std::vector<std::string> t;
-    
+
     t = read_timefile(tname);
-    long TSIZE = t.size();   // Determine number of snapshots from time entry list
+    long TSIZE = t.size(); // Determine number of snapshots from time entry list
 
     /* Check whether the requested number of modes to write is larger than
     the number of snapshots. If so, set the number of modes to the number of
     snapshots. */
-    if (NSIZE > TSIZE){
-        std::cout << "Modes to write exceed available snapshots. Adjusted.\n" << std::flush; 
+    if (NSIZE > TSIZE)
+    {
+        std::cout << "Modes to write exceed available snapshots. Adjusted.\n"
+                << std::flush;
         NSIZE = TSIZE;
     }
-
 
     // READING INPUT FILES
 
@@ -169,12 +220,15 @@ void pod(ez::ezOptionParser &opt)
 
     MatrixXd m;
     start = omp_get_wtime();
-    std::cout << "Reading files..." << std::flush;
-    auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long) VSIZE);
+    std::cout << "Reading files..." << std::flush;        
+    // auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE);
+    // std::vector<int> cols_to_read = {1,2,3};
+    // auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE, cols_to_read);
+    //int offset = 0;
+    auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long) VSIZE, (long) OFFSET);
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
-    
+            << std::endl;
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
@@ -184,7 +238,7 @@ void pod(ez::ezOptionParser &opt)
     pm = (1.0 / TSIZE) * m.transpose() * m;
     end = omp_get_wtime();
     std::cout << "\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 
     // APPLY SPECTRAL POD FILTER IF DESIRED
 
@@ -233,7 +287,7 @@ void pod(ez::ezOptionParser &opt)
 
         end = omp_get_wtime();
         std::cout << "\t\t Done in " << end - start << "s \n"
-                  << std::endl;
+                << std::endl;
     }
 
     // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
@@ -248,7 +302,7 @@ void pod(ez::ezOptionParser &opt)
     MatrixXd eigvec = eigensolver.eigenvectors().rowwise().reverse();
     end = omp_get_wtime();
     std::cout << "\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 
     // COMPUTING POD MODES
 
@@ -274,7 +328,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 
     // WRITING SORTED EIGENVALUES
 
@@ -288,7 +342,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 
     // WRITING CHRONOS
 
@@ -307,7 +361,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 
     // WRITING POD MODES
 
@@ -341,7 +395,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-              << std::endl;
+            << std::endl;
 }
 
 void Usage(ez::ezOptionParser &opt)
@@ -373,33 +427,33 @@ int main(int argc, const char *argv[])
     );
 
     opt.add(
-        "",                            // Default.
-        1,                             // Required?
-        1,                             // Number of args expected.
-        0,                             // Delimiter if expecting multiple args.
-        "File with time snapshot list",// Help description.
-        "-tf"                          // Flag token.
+        "",                             // Default.
+        1,                              // Required?
+        1,                              // Number of args expected.
+        0,                              // Delimiter if expecting multiple args.
+        "File with time snapshot list", // Help description.
+        "-tf"                           // Flag token.
     );
 
     opt.add(
-        "",                            // Default.
-        1,                             // Required?
-        1,                             // Number of args expected.
-        0,                             // Delimiter if expecting multiple args.
-        "Point cloud file name (in time directories).",// Help description.
-        "-pcfn"                        // Flag token.
+        "",                                             // Default.
+        1,                                              // Required?
+        1,                                              // Number of args expected.
+        0,                                              // Delimiter if expecting multiple args.
+        "Point cloud file name (in time directories).", // Help description.
+        "-pcfn"                                         // Flag token.
     );
 
     opt.add(
-        "",                 // Default.
-        1,                  // Required?
-        1,                  // Number of args expected.
-        0,                  // Delimiter if expecting multiple args.
+        "",                                                                // Default.
+        1,                                                                 // Required?
+        1,                                                                 // Number of args expected.
+        0,                                                                 // Delimiter if expecting multiple args.
         "Directory where the time directories reside as sub-directories.", // Help description.
-        "-i",               // Flag token.
-        "-inp",             // Flag token.
-        "-input",           // Flag token.
-        "--input"           // Flag token.
+        "-i",                                                              // Flag token.
+        "-inp",                                                            // Flag token.
+        "-input",                                                          // Flag token.
+        "--input"                                                          // Flag token.
     );
 
     opt.add(
@@ -435,17 +489,27 @@ int main(int argc, const char *argv[])
         0,                             // Delimiter if expecting multiple args.
         "Number of values per point.", // Help description.
         "-v",                          // Flag token.
-        vU8                            //Validate input
+        vU8                            // Validate input
     );
 
     opt.add(
-        "",                                                                             // Default.
-        1,                                                                              // Required?
-        1,                                                                              // Number of args expected.
-        0,                                                                              // Delimiter if expecting multiple args.
-        "Number of modes to write. Must be less or equal to number of snapshots used.", // Help description.
-        "-nm",                                                                          // Flag token.
-        vU8                                                                             //Validate input
+        "0",                           // Default.
+        0,                             // Required?
+        1,                             // Number of args expected.
+        0,                             // Delimiter if expecting multiple args.
+        "Point cloud file column offset (for reading data)", // Help description.
+        "-pcfco",                      // Flag token.
+        vU8                            // Validate input
+    );
+
+    opt.add(
+        "",                          // Default.
+        1,                           // Required?
+        1,                           // Number of args expected.
+        0,                           // Delimiter if expecting multiple args.
+        "Number of modes to write.", // Help description.
+        "-nm",                       // Flag token.
+        vU8                          // Validate input
     );
 
     opt.add(
@@ -455,7 +519,7 @@ int main(int argc, const char *argv[])
         0,                             // Delimiter if expecting multiple args.
         "Number of parallel threads.", // Help description.
         "-np",                         // Flag token.
-        vU8                            //Validate input
+        vU8                            // Validate input
     );
 
     // Perform the actual parsing of the command line.
