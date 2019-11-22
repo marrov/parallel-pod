@@ -166,7 +166,7 @@ void pod(ez::ezOptionParser &opt)
 
     // Offset to (column number of) the first column to read from.
     long long OFFSET;
-    opt.get("-pcfco")->getLongLong(OFFSET);
+    opt.get("-co")->getLongLong(OFFSET);
 
     // Size of input POD modes (number of modes to write)
     long long NSIZE;
@@ -498,7 +498,7 @@ int main(int argc, const char *argv[])
         1,                             // Number of args expected.
         0,                             // Delimiter if expecting multiple args.
         "Point cloud file column offset (for reading data)", // Help description.
-        "-pcfco",                      // Flag token.
+        "-co",                         // Flag token.
         vU8                            // Validate input
     );
 
