@@ -16,18 +16,27 @@
 using namespace Eigen;
 
 /*
+Struct to hold information about the point cloud files.
+*/
+struct pointCloudFileInfo
+{
+    long rows;
+    long columns;
+};
+
+/*
 Function for splitting strings into a vector datatype.
 */
-std::vector<std::string> split_string(const std::string& s, char delimiter)
+std::vector<std::string> split_string(const std::string &s, char delimiter)
 {
-std::vector<std::string> tokens;
-std::string token;
-std::istringstream tokenStream(s);
-while (std::getline(tokenStream, token, delimiter))
-{
-    tokens.push_back(token);
-}
-return tokens;
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
 }
 
 /*
@@ -58,12 +67,13 @@ std::vector<std::string> read_timefile(const std::string tfile)
 /*
 Parse the point cloud files and populate matrix with data.
 */
-long read_pcfs_to_matrix(MatrixXd *m,
-                        const std::vector<std::string> *fvec,
-                        const long no_cols, 
-                        //std::vector<int> cols_to_read)
-                        const long offset)
+pointCloudFileInfo read_pcfs_to_matrix(MatrixXd *m,
+                                       const std::vector<std::string> *fvec,
+                                       const long no_cols,
+                                       //std::vector<int> cols_to_read)
+                                       const long offset)
 {
+    pointCloudFileInfo pointCloudRefFileInfo;
     bool verbose = false;
 
     if (verbose)
@@ -73,24 +83,32 @@ long read_pcfs_to_matrix(MatrixXd *m,
     }
 
     /* Establish a reference number of points for checking the problem size.
-    The size is determined from the point cloud file in the first time 
-    directory. */
-    long REF_MSIZE = 0;
+    The size is determined from the point cloud file in the first time directory. */
+    pointCloudRefFileInfo.rows = 0;
     std::string ref_fname = *(fvec->begin());
-    std::string unused_line;
 
     std::ifstream ref_file(ref_fname);
     if (ref_file.is_open())
     {
+        std::string unused_line;
+
+        /* Get a line and count the number of columns by splitting at spaces ' '.
+        Increment the row counter. */
+        getline(ref_file, unused_line);
+        pointCloudRefFileInfo.rows++;
+        auto tokens = split_string(unused_line, ' ');
+        pointCloudRefFileInfo.columns = tokens.size();
+
+        /* Count the rest of the rows. */
         while (getline(ref_file, unused_line))
-            REF_MSIZE++;
+            pointCloudRefFileInfo.rows++;
     }
     ref_file.close();
 
     if (verbose)
     {
         std::cout << "From file " << ref_fname << std::endl;
-        std::cout << "found " << REF_MSIZE << " points" << std::endl;
+        std::cout << "found " << pointCloudRefFileInfo.rows << " points" << std::endl;
     }
 
     /* Number of time samples to consider is determined from the length of the
@@ -98,7 +116,7 @@ long read_pcfs_to_matrix(MatrixXd *m,
     long TSIZE = fvec->size();
 
     /* Define matrix to store the file content */
-    *m = MatrixXd::Zero(REF_MSIZE * no_cols, TSIZE);
+    *m = MatrixXd::Zero(pointCloudRefFileInfo.rows * no_cols, TSIZE);
     double dummy = 0;
 #pragma omp parallel
 #pragma omp for
@@ -108,20 +126,20 @@ long read_pcfs_to_matrix(MatrixXd *m,
 
         if (file.is_open())
         {
-            for (size_t row_idx = 0; row_idx < REF_MSIZE; row_idx++)
+            for (size_t row_idx = 0; row_idx < pointCloudRefFileInfo.rows; row_idx++)
             {
-                for (size_t col_no = 0, j=0; col_no < (no_cols+offset); col_no++)
+                for (size_t col_no = 0, j = 0; col_no < (no_cols + offset); col_no++)
                 {
-                    if (col_no<offset)
+                    if (col_no < offset)
                         file >> dummy;
                     else
                     {
-                        file >> (*m)(row_idx + REF_MSIZE * j, snapshot);
+                        file >> (*m)(row_idx + pointCloudRefFileInfo.rows * j, snapshot);
                         j++;
                     }
                 }
             }
-            
+
             /*
             std::string line;
             std::vector<std::string> tokens;
@@ -137,11 +155,11 @@ long read_pcfs_to_matrix(MatrixXd *m,
                 for(col_idx=0; col_idx<no_cols; col_idx++)
                 {
                     auto tmp_val = tokens[(cols_to_read[col_idx]-1)];
-                    (*m)(row_idx + REF_MSIZE*col_idx, snapshot) = std::stod(tmp_val);
+                    (*m)(row_idx + pointCloudRefFileInfo.rows*col_idx, snapshot) = std::stod(tmp_val);
                 }
             }
             */
-            
+
             file.close();
         }
         else
@@ -150,7 +168,7 @@ long read_pcfs_to_matrix(MatrixXd *m,
         }
     }
 
-    return REF_MSIZE;
+    return pointCloudRefFileInfo;
 }
 
 void pod(ez::ezOptionParser &opt)
@@ -158,7 +176,7 @@ void pod(ez::ezOptionParser &opt)
     double start, end;
 
     std::cout << "Starting POD routines \n"
-            << std::endl;
+              << std::endl;
 
     // Size of the variable (1 if scalar, 3 if vector)
     long long VSIZE;
@@ -204,7 +222,7 @@ void pod(ez::ezOptionParser &opt)
     if (NSIZE > TSIZE)
     {
         std::cout << "Modes to write exceed available snapshots. Adjusted.\n"
-                << std::flush;
+                  << std::flush;
         NSIZE = TSIZE;
     }
 
@@ -220,15 +238,21 @@ void pod(ez::ezOptionParser &opt)
 
     MatrixXd m;
     start = omp_get_wtime();
-    std::cout << "Reading files..." << std::flush;        
+    std::cout << "Reading files..." << std::flush;
     // auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE);
     // std::vector<int> cols_to_read = {1,2,3};
     // auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE, cols_to_read);
     //int offset = 0;
-    auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long) VSIZE, (long) OFFSET);
+    //auto REF_MSIZE = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE, (long)OFFSET);
+    auto pointCloudInfo = read_pcfs_to_matrix(&m, &pcfs, (long)VSIZE, (long)OFFSET);
+    auto REF_MSIZE = pointCloudInfo.rows;
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
+
+    std::cout << "File contains " << pointCloudInfo.rows << " rows and " << pointCloudInfo.columns << " columns. "
+              << "Read data from columns " << (OFFSET + 1) << " to " << (OFFSET + VSIZE) << ".\n"
+              << std::endl;
 
     // COMPUTING NORMALISED PROJECTION MATRIX
 
@@ -238,7 +262,7 @@ void pod(ez::ezOptionParser &opt)
     pm = (1.0 / TSIZE) * m.transpose() * m;
     end = omp_get_wtime();
     std::cout << "\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 
     // APPLY SPECTRAL POD FILTER IF DESIRED
 
@@ -287,7 +311,7 @@ void pod(ez::ezOptionParser &opt)
 
         end = omp_get_wtime();
         std::cout << "\t\t Done in " << end - start << "s \n"
-                << std::endl;
+                  << std::endl;
     }
 
     // COMPUTING SORTED EIGENVALUES AND EIGENVECTORS
@@ -302,7 +326,7 @@ void pod(ez::ezOptionParser &opt)
     MatrixXd eigvec = eigensolver.eigenvectors().rowwise().reverse();
     end = omp_get_wtime();
     std::cout << "\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 
     // COMPUTING POD MODES
 
@@ -328,7 +352,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 
     // WRITING SORTED EIGENVALUES
 
@@ -342,7 +366,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 
     // WRITING CHRONOS
 
@@ -361,7 +385,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 
     // WRITING POD MODES
 
@@ -395,7 +419,7 @@ void pod(ez::ezOptionParser &opt)
     }
     end = omp_get_wtime();
     std::cout << "\t\t\t\t Done in " << end - start << "s \n"
-            << std::endl;
+              << std::endl;
 }
 
 void Usage(ez::ezOptionParser &opt)
@@ -493,13 +517,13 @@ int main(int argc, const char *argv[])
     );
 
     opt.add(
-        "0",                           // Default.
-        0,                             // Required?
-        1,                             // Number of args expected.
-        0,                             // Delimiter if expecting multiple args.
+        "0",                                                 // Default.
+        0,                                                   // Required?
+        1,                                                   // Number of args expected.
+        0,                                                   // Delimiter if expecting multiple args.
         "Point cloud file column offset (for reading data)", // Help description.
-        "-co",                         // Flag token.
-        vU8                            // Validate input
+        "-co",                                               // Flag token.
+        vU8                                                  // Validate input
     );
 
     opt.add(
