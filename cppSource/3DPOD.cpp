@@ -332,22 +332,42 @@ void pod(ez::ezOptionParser &opt)
 
     start = omp_get_wtime();
     std::cout << "Computing POD modes..." << std::flush;
+
+    /* Define matrices to store scalar or vector values*/
+    // For scalar or vector define one matrix
     MatrixXd podx = MatrixXd::Zero(REF_MSIZE, TSIZE);
+    // For vector, allocate two more matrices
+    /* It is excessive to define these two additional matrices here whether
+    it is a a vector or not. Should be defined if needed. */
     MatrixXd pody = MatrixXd::Zero(REF_MSIZE, TSIZE);
     MatrixXd podz = MatrixXd::Zero(REF_MSIZE, TSIZE);
+
+    // Scalar
+    if (VSIZE == 1)
+    {
 #pragma omp parallel
 #pragma omp for
-    for (size_t i = 0; i < TSIZE; i++)
-    {
-        for (size_t j = 0; j < TSIZE; j++)
+        for (size_t i = 0; i < TSIZE; i++)
         {
-            //podx.col(i) = podx.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(0 * MSIZE, j, MSIZE, 1);
-            //pody.col(i) = pody.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(1 * MSIZE, j, MSIZE, 1);
-            //podz.col(i) = podz.col(i) + (1.0 / (eigval(i) * TSIZE)) * sqrt(eigval(i) * TSIZE) * eigvec(j, i) * m.block(2 * MSIZE, j, MSIZE, 1);
-
-            podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * REF_MSIZE, j, REF_MSIZE, 1);
-            pody.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(1 * REF_MSIZE, j, REF_MSIZE, 1);
-            podz.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(2 * REF_MSIZE, j, REF_MSIZE, 1);
+            for (size_t j = 0; j < TSIZE; j++)
+            {
+                podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * REF_MSIZE, j, REF_MSIZE, 1);
+            }
+        }
+    }
+    // Vector
+    if (VSIZE == 3)
+    {
+#pragma omp parallel
+#pragma omp for
+        for (size_t i = 0; i < TSIZE; i++)
+        {
+            for (size_t j = 0; j < TSIZE; j++)
+            {
+                podx.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(0 * REF_MSIZE, j, REF_MSIZE, 1);
+                pody.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(1 * REF_MSIZE, j, REF_MSIZE, 1);
+                podz.col(i) += (eigvec(j, i) / sqrt(eigval(i) * TSIZE)) * m.block(2 * REF_MSIZE, j, REF_MSIZE, 1);
+            }
         }
     }
     end = omp_get_wtime();
@@ -392,28 +412,50 @@ void pod(ez::ezOptionParser &opt)
     start = omp_get_wtime();
     std::cout << "Writing POD modes..." << std::flush;
     std::string xyz = "xyz_";
+    // Scalar
+    if (VSIZE == 1)
+    {
 #pragma omp parallel
 #pragma omp for
-    for (size_t j = 0; j < VSIZE; j++)
-    {
-        for (size_t i = 0; i < NSIZE; i++)
+        for (size_t j = 0; j < VSIZE; j++)
         {
-            std::ofstream writeMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + std::to_string(i) + ".dat");
-            if (writeMode.is_open())
+            for (size_t i = 0; i < NSIZE; i++)
             {
-                if (j == 0)
+                std::ofstream writeMode(dir_mode + "/mode_s" + xyz.at(3) + std::to_string(i) + ".dat");
+                if (writeMode.is_open())
                 {
                     writeMode << std::scientific << std::setprecision(6) << podx.col(i);
+                    writeMode.close();
                 }
-                else if (j == 1)
+            }
+        }
+    }
+    // Vector
+    if (VSIZE == 3)
+    {
+#pragma omp parallel
+#pragma omp for
+        for (size_t j = 0; j < VSIZE; j++)
+        {
+            for (size_t i = 0; i < NSIZE; i++)
+            {
+                std::ofstream writeMode(dir_mode + "/mode_U" + xyz.at(j) + xyz.at(3) + std::to_string(i) + ".dat");
+                if (writeMode.is_open())
                 {
-                    writeMode << std::scientific << std::setprecision(6) << pody.col(i);
+                    if (j == 0)
+                    {
+                        writeMode << std::scientific << std::setprecision(6) << podx.col(i);
+                    }
+                    else if (j == 1)
+                    {
+                        writeMode << std::scientific << std::setprecision(6) << pody.col(i);
+                    }
+                    else if (j == 2)
+                    {
+                        writeMode << std::scientific << std::setprecision(6) << podz.col(i);
+                    }
+                    writeMode.close();
                 }
-                else if (j == 2)
-                {
-                    writeMode << std::scientific << std::setprecision(6) << podz.col(i);
-                }
-                writeMode.close();
             }
         }
     }
