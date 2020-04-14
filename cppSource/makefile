@@ -21,7 +21,7 @@ CC      := g++
 CCFLAGS :=-std=c++11 $(IDIR:%=-I%) -O3 -fopenmp
 LDFLAGS :=
 
-NAMES   := 3DPOD_U 3DPOD_s
+NAMES   := 3DPOD_U 3DPOD_s 3DPOD
 TARGETS := $(NAMES:%=%$(EXECEND))
 
 .PHONY: all clean install_to_test
